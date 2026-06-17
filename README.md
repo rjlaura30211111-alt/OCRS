@@ -33,11 +33,12 @@ See `templates/README.md` for the full guide.
 
 ## Deploy to Vercel
 
-1. Push this repo to GitHub
-2. Import the project in [Vercel](https://vercel.com/new) or run:
+- **Live:** [https://ocrs-cyan.vercel.app](https://ocrs-cyan.vercel.app)
+- **GitHub:** [https://github.com/rjlaura30211111-alt/OCRS](https://github.com/rjlaura30211111-alt/OCRS)
+- **Dashboard:** [Vercel — rogie-josue-laura-s-projects/ocrs](https://vercel.com/rogie-josue-laura-s-projects/ocrs)
 
 ```bash
-npx vercel --prod
+npx vercel --prod --scope rogie-josue-laura-s-projects
 ```
 
 Commit `templates/document-template.docx` with the app so the template is available on deploy.
