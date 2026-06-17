@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-function SubmitIcon() {
+function SubmitIcon({ className = "h-7 w-7" }: { className?: string }) {
   return (
     <svg
       aria-hidden
-      className="h-7 w-7"
+      className={className}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -24,11 +24,35 @@ function SubmitIcon() {
   );
 }
 
-function TrackIcon() {
+function ScanIcon({ className = "h-7 w-7" }: { className?: string }) {
   return (
     <svg
       aria-hidden
-      className="h-7 w-7"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.75}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M14.25 15.75h4.5M15.75 14.25v4.5"
+      />
+    </svg>
+  );
+}
+
+function TrackIcon({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      className={className}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -48,6 +72,21 @@ function TrackIcon() {
   );
 }
 
+function ChevronIcon() {
+  return (
+    <svg
+      aria-hidden
+      className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-primary sm:hidden"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+    </svg>
+  );
+}
+
 const menuItems = [
   {
     href: "/submit",
@@ -56,8 +95,20 @@ const menuItems = [
     action: "Submit now",
     icon: SubmitIcon,
     accent: "from-blue-500 to-blue-600",
-    iconBg: "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white",
+    iconBg:
+      "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white",
     ring: "group-hover:ring-blue-200",
+  },
+  {
+    href: "/scan",
+    title: "Scan QR",
+    description: "Scan a document QR code to view or update routing information.",
+    action: "Open scanner",
+    icon: ScanIcon,
+    accent: "from-emerald-500 to-emerald-600",
+    iconBg:
+      "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white",
+    ring: "group-hover:ring-emerald-200",
   },
   {
     href: "/track",
@@ -66,14 +117,15 @@ const menuItems = [
     action: "Track document",
     icon: TrackIcon,
     accent: "from-violet-500 to-violet-600",
-    iconBg: "bg-violet-50 text-violet-600 group-hover:bg-violet-600 group-hover:text-white",
+    iconBg:
+      "bg-violet-50 text-violet-600 group-hover:bg-violet-600 group-hover:text-white",
     ring: "group-hover:ring-violet-200",
   },
 ] as const;
 
 export function HomeLanding() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12">
+    <main className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden px-4 py-5 sm:px-6 sm:py-12">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_transparent_50%),radial-gradient(ellipse_at_bottom_right,_#ede9fe_0%,_transparent_45%)]"
@@ -87,12 +139,12 @@ export function HomeLanding() {
         className="pointer-events-none absolute -right-24 bottom-20 h-64 w-64 rounded-full bg-violet-200/30 blur-3xl"
       />
 
-      <div className="relative w-full max-w-3xl">
-        <header className="mb-10 text-center">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-black/5">
+      <div className="relative w-full max-w-4xl">
+        <header className="mb-4 text-center sm:mb-10">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-md ring-1 ring-black/5 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl">
             <svg
               aria-hidden
-              className="h-7 w-7 text-blue-600"
+              className="h-5 w-5 text-blue-600 sm:h-7 sm:w-7"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -105,42 +157,47 @@ export function HomeLanding() {
               />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Document Tracker
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-base leading-relaxed text-muted">
-            Submit routing slips with QR codes and track your documents in one place.
+          <p className="mx-auto mt-1.5 hidden max-w-md text-sm leading-relaxed text-muted sm:mt-3 sm:block sm:text-base">
+            Submit routing slips with QR codes and track your documents in one
+            place.
           </p>
         </header>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/80 p-6 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-xl hover:ring-2 ${item.ring}`}
+                className={`group relative flex items-center gap-3 overflow-hidden rounded-xl border border-white/60 bg-white/80 p-3.5 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg hover:ring-2 sm:flex-col sm:items-stretch sm:rounded-2xl sm:p-6 sm:hover:-translate-y-1 sm:hover:shadow-xl ${item.ring}`}
               >
                 <div
                   aria-hidden
-                  className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.accent} opacity-0 transition group-hover:opacity-100`}
+                  className={`absolute inset-x-0 top-0 hidden h-1 bg-gradient-to-r sm:block ${item.accent} opacity-0 transition group-hover:opacity-100`}
                 />
 
                 <div
-                  className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition duration-300 ${item.iconBg}`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition duration-300 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl ${item.iconBg}`}
                 >
-                  <Icon />
+                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
 
-                <h2 className="text-lg font-semibold text-slate-900">
-                  {item.title}
-                </h2>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">
-                  {item.description}
-                </p>
+                <div className="min-w-0 flex-1 sm:flex sm:flex-col">
+                  <h2 className="text-sm font-semibold text-slate-900 sm:text-lg">
+                    {item.title}
+                  </h2>
+                  <p className="mt-0.5 hidden text-sm leading-relaxed text-muted sm:mt-2 sm:block">
+                    {item.description}
+                  </p>
+                </div>
 
-                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 transition group-hover:gap-2.5 group-hover:text-primary">
+                <ChevronIcon />
+
+                <span className="mt-5 hidden items-center gap-1.5 text-sm font-semibold text-slate-700 transition group-hover:gap-2.5 group-hover:text-primary sm:inline-flex">
                   {item.action}
                   <svg
                     aria-hidden
