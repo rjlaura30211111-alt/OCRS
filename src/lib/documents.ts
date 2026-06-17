@@ -1,4 +1,5 @@
 import type { ActionRequested } from "@/lib/actions";
+import type { ReceiveDisposition } from "@/lib/dispositions";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export const DOCUMENT_STATUSES = [
@@ -34,6 +35,13 @@ export type CreateDocumentInput = {
   actionRequested: ActionRequested;
   date: string;
   time: string;
+};
+
+export type ReceiveDocumentInput = {
+  referenceNumber: string;
+  receivedBy: string;
+  status: ReceiveDisposition;
+  currentOffice?: string;
 };
 
 type DocumentRow = {
@@ -146,6 +154,51 @@ export async function searchDocumentsByReference(
   }
 
   return (data ?? []).map((row) => mapRow(row as DocumentRow));
+}
+
+export async function receiveDocument(
+  input: ReceiveDocumentInput
+): Promise<DocumentRecord> {
+  const supabase = getSupabaseAdmin();
+  const existing = await getDocumentByReference(input.referenceNumber);
+
+  if (!existing) {
+    throw new Error("No Document Found");
+  }
+
+  const office = input.currentOffice?.trim() || existing.currentOffice || "OCRS";
+  const receivedAt = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("documents")
+    .update({
+      received_by: input.receivedBy.trim(),
+      status: input.status,
+      current_office: office,
+      updated_at: receivedAt,
+    })
+    .eq("id", existing.id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const { error: logError } = await supabase.from("document_routing_logs").insert({
+    document_id: existing.id,
+    office_code: office,
+    received_by: input.receivedBy.trim(),
+    status: input.status,
+    logged_at: receivedAt,
+    notes: "Document received",
+  });
+
+  if (logError) {
+    throw new Error(logError.message);
+  }
+
+  return mapRow(data as DocumentRow);
 }
 
 export function toDocumentPayload(document: DocumentRecord) {

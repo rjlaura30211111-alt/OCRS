@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Html5Qrcode } from "html5-qrcode";
+import { RECEIVE_DISPOSITIONS } from "@/lib/dispositions";
+import {
+  formatDisplayDate,
+  formatDisplayTime,
+} from "@/lib/datetime";
 
 export type DocumentLookup = {
   referenceNumber: string;
@@ -31,9 +36,27 @@ function formatTimestamp(value: string): string {
   });
 }
 
-function DocumentDetails({ document }: { document: DocumentLookup }) {
+function useLiveDateTime() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  return {
+    date,
+    time,
+    label: `${formatDisplayDate(date)} · ${formatDisplayTime(time)}`,
+  };
+}
+
+function DocumentSummary({ document }: { document: DocumentLookup }) {
   return (
-    <dl className="mt-4 space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm">
+    <dl className="mt-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
       <div>
         <dt className="font-medium text-muted">Reference Number</dt>
         <dd className="mt-0.5 font-mono font-semibold text-slate-900">
@@ -52,13 +75,182 @@ function DocumentDetails({ document }: { document: DocumentLookup }) {
         <dt className="font-medium text-muted">Action Requested</dt>
         <dd className="mt-0.5">{document.actionRequested}</dd>
       </div>
+    </dl>
+  );
+}
+
+function ReceiveForm({
+  document,
+  onSaved,
+}: {
+  document: DocumentLookup;
+  onSaved: (updated: DocumentLookup) => void;
+}) {
+  const liveTime = useLiveDateTime();
+  const defaultDisposition = RECEIVE_DISPOSITIONS.includes(
+    document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number]
+  )
+    ? (document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number])
+    : RECEIVE_DISPOSITIONS[0];
+
+  const [receivedBy, setReceivedBy] = useState(document.receivedBy ?? "");
+  const [disposition, setDisposition] = useState(defaultDisposition);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    setReceivedBy(document.receivedBy ?? "");
+    setDisposition(
+      RECEIVE_DISPOSITIONS.includes(
+        document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number]
+      )
+        ? (document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number])
+        : RECEIVE_DISPOSITIONS[0]
+    );
+    setSuccess(false);
+    setError(null);
+  }, [document]);
+
+  async function handleSubmit() {
+    if (!receivedBy.trim()) {
+      setError("Please enter who received the document.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const response = await fetch("/api/documents/receive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          referenceNumber: document.referenceNumber,
+          receivedBy: receivedBy.trim(),
+          status: disposition,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to save receipt.");
+      }
+
+      onSaved(data.document as DocumentLookup);
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save receipt.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-emerald-200 bg-white p-4">
+      <h2 className="text-sm font-semibold text-slate-900">Receive & Disposition</h2>
+
+      <div className="mt-3 space-y-3">
+        <div>
+          <label htmlFor="received-by" className="mb-1.5 block text-sm font-medium">
+            Received by
+          </label>
+          <input
+            id="received-by"
+            type="text"
+            value={receivedBy}
+            onChange={(e) => setReceivedBy(e.target.value)}
+            placeholder="Name of receiver"
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="disposition" className="mb-1.5 block text-sm font-medium">
+            Disposition
+          </label>
+          <select
+            id="disposition"
+            value={disposition}
+            onChange={(e) =>
+              setDisposition(e.target.value as (typeof RECEIVE_DISPOSITIONS)[number])
+            }
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+          >
+            {RECEIVE_DISPOSITIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Date Received</label>
+            <input
+              type="text"
+              readOnly
+              value={formatDisplayDate(liveTime.date)}
+              className="w-full rounded-lg border border-border bg-slate-50 px-4 py-3 text-sm text-muted"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Time Received</label>
+            <input
+              type="text"
+              readOnly
+              value={formatDisplayTime(liveTime.time)}
+              className="w-full rounded-lg border border-border bg-slate-50 px-4 py-3 text-sm text-muted"
+            />
+          </div>
+        </div>
+
+        <p className="text-xs text-muted">
+          Timestamp is recorded automatically when you save.
+        </p>
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={saving}
+          className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Save Receipt"}
+        </button>
+
+        {success && (
+          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            Receipt saved at {liveTime.label}
+          </p>
+        )}
+
+        {error && (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            {error}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SavedSummary({ document }: { document: DocumentLookup }) {
+  return (
+    <dl className="mt-3 space-y-2 rounded-lg bg-emerald-50/80 p-3 text-sm">
       <div>
         <dt className="font-medium text-muted">Received by</dt>
         <dd className="mt-0.5">{document.receivedBy ?? "—"}</dd>
       </div>
       <div>
+        <dt className="font-medium text-muted">Disposition</dt>
+        <dd className="mt-0.5 font-semibold">{document.rawStatus}</dd>
+      </div>
+      <div>
         <dt className="font-medium text-muted">Status</dt>
-        <dd className="mt-0.5 font-semibold text-slate-900">{document.status}</dd>
+        <dd className="mt-0.5">{document.status}</dd>
       </div>
       <div>
         <dt className="font-medium text-muted">TimeStamp</dt>
@@ -111,7 +303,14 @@ function QrScannerModal({
 }) {
   const scannerId = useId().replace(/:/g, "");
   const readerRef = useRef<Html5Qrcode | null>(null);
+  const onScanRef = useRef(onScan);
+  const onCloseRef = useRef(onClose);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onScanRef.current = onScan;
+    onCloseRef.current = onClose;
+  }, [onScan, onClose]);
 
   useEffect(() => {
     if (!open) {
@@ -128,8 +327,8 @@ function QrScannerModal({
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 220, height: 220 } },
         (decodedText) => {
-          onScan(decodedText.trim());
-          onClose();
+          onScanRef.current(decodedText.trim());
+          onCloseRef.current();
         },
         () => {}
       )
@@ -149,7 +348,7 @@ function QrScannerModal({
         instance?.clear();
       }
     };
-  }, [open, onClose, onScan, scannerId]);
+  }, [open, scannerId]);
 
   if (!open) {
     return null;
@@ -353,7 +552,13 @@ export function ReceivedDocumentCard() {
           </p>
         )}
 
-        {selected && <DocumentDetails document={selected} />}
+        {selected && (
+          <>
+            <DocumentSummary document={selected} />
+            <ReceiveForm document={selected} onSaved={setSelected} />
+            <SavedSummary document={selected} />
+          </>
+        )}
 
         {error && (
           <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
