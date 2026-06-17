@@ -5,6 +5,7 @@ type ConfirmSubmitModalProps = {
   subject: string;
   referenceNumber: string;
   drafter: string;
+  officeDivision: string;
   actionRequested: string;
   submitting: boolean;
   onConfirm: () => void;
@@ -16,6 +17,7 @@ export function ConfirmSubmitModal({
   subject,
   referenceNumber,
   drafter,
+  officeDivision,
   actionRequested,
   submitting,
   onConfirm,
@@ -43,6 +45,10 @@ export function ConfirmSubmitModal({
           <div>
             <dt className="font-medium text-muted">Drafter</dt>
             <dd className="mt-1">{drafter}</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-muted">Office/Division</dt>
+            <dd className="mt-1">{officeDivision}</dd>
           </div>
           <div>
             <dt className="font-medium text-muted">Action Requested</dt>

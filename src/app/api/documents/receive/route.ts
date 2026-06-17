@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidReceiveDisposition } from "@/lib/dispositions";
-import { isValidOfficeCode } from "@/lib/offices";
+import { isValidReceiveOffice } from "@/lib/offices";
 import {
   getRoutingLogsByReference,
   receiveDocument,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isValidOfficeCode(currentOffice)) {
+    if (!isValidReceiveOffice(currentOffice)) {
       return NextResponse.json(
         { error: "Office is required." },
         { status: 400 }

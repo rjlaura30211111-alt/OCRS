@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Html5Qrcode } from "html5-qrcode";
 import { RECEIVE_DISPOSITIONS, type ReceiveDisposition } from "@/lib/dispositions";
-import { OFFICE_CODES } from "@/lib/offices";
+import { RECEIVE_OFFICE_OPTIONS } from "@/lib/offices";
 import {
   formatDisplayDate,
   formatDisplayTime,
@@ -156,7 +156,7 @@ function ReceiveForm({
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           >
             <option value="">Select office...</option>
-            {OFFICE_CODES.map((code) => (
+            {RECEIVE_OFFICE_OPTIONS.map((code) => (
               <option key={code} value={code}>
                 {code}
               </option>

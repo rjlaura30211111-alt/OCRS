@@ -9,11 +9,13 @@ import {
   getDefaultTimeValue,
 } from "@/lib/datetime";
 import { ConfirmSubmitModal } from "@/components/ConfirmSubmitModal";
+import { OFFICE_DIVISIONS, type OfficeDivision } from "@/lib/offices";
 
 export function SubmitReportCard() {
   const [subject, setSubject] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [drafter, setDrafter] = useState("");
+  const [officeDivision, setOfficeDivision] = useState<OfficeDivision | "">("");
   const [date, setDate] = useState(getDefaultDateValue);
   const [time, setTime] = useState(getDefaultTimeValue);
   const [actionRequested, setActionRequested] = useState<ActionRequested>(
@@ -34,6 +36,10 @@ export function SubmitReportCard() {
     }
     if (!drafter.trim()) {
       setError("Please enter a drafter.");
+      return false;
+    }
+    if (!officeDivision) {
+      setError("Please select an office/division.");
       return false;
     }
     if (!date) {
@@ -67,6 +73,7 @@ export function SubmitReportCard() {
           subject: subject.trim(),
           referenceNumber: referenceNumber.trim(),
           drafter: drafter.trim(),
+          officeDivision,
           date,
           time,
           actionRequested,
@@ -152,6 +159,27 @@ export function SubmitReportCard() {
             />
           </div>
 
+          <div>
+            <label htmlFor="office" className="mb-2 block text-sm font-medium">
+              Office/Division:
+            </label>
+            <select
+              id="office"
+              value={officeDivision}
+              onChange={(e) =>
+                setOfficeDivision(e.target.value as OfficeDivision)
+              }
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">Select office/division...</option>
+              {OFFICE_DIVISIONS.map((office) => (
+                <option key={office} value={office}>
+                  {office}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="date" className="mb-2 block text-sm font-medium">
@@ -225,6 +253,7 @@ export function SubmitReportCard() {
         subject={subject.trim()}
         referenceNumber={referenceNumber.trim()}
         drafter={drafter.trim()}
+        officeDivision={officeDivision}
         actionRequested={actionRequested}
         submitting={submitting}
         onConfirm={handleConfirmSubmit}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidAction } from "@/lib/actions";
 import { createDocument } from "@/lib/documents";
+import { isValidOfficeDivision } from "@/lib/offices";
 import { fillWordTemplate } from "@/lib/doc-template";
 import { canAutoOpenWord, saveAndOpenWord } from "@/lib/open-doc";
 import { generateQrPng } from "@/lib/qr";
@@ -19,6 +20,8 @@ export async function POST(request: NextRequest) {
       typeof body.subject === "string" ? body.subject.trim() : "";
     const drafter =
       typeof body.drafter === "string" ? body.drafter.trim() : "";
+    const officeDivision =
+      typeof body.officeDivision === "string" ? body.officeDivision.trim() : "";
     const date = typeof body.date === "string" ? body.date.trim() : "";
     const time = typeof body.time === "string" ? body.time.trim() : "";
     const actionRequested =
@@ -38,6 +41,13 @@ export async function POST(request: NextRequest) {
 
     if (!drafter) {
       return NextResponse.json({ error: "Drafter is required." }, { status: 400 });
+    }
+
+    if (!isValidOfficeDivision(officeDivision)) {
+      return NextResponse.json(
+        { error: "Office/Division is required." },
+        { status: 400 }
+      );
     }
 
     if (!date) {
@@ -69,6 +79,7 @@ export async function POST(request: NextRequest) {
       referenceNumber,
       subject,
       drafter,
+      officeDivision,
       actionRequested,
       date,
       time,

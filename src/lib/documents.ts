@@ -32,6 +32,7 @@ export type CreateDocumentInput = {
   referenceNumber: string;
   subject: string;
   drafter: string;
+  officeDivision: string;
   actionRequested: ActionRequested;
   date: string;
   time: string;
@@ -110,7 +111,7 @@ export async function createDocument(
       sent_date: input.date,
       sent_time: input.time,
       status: "Pending",
-      current_office: "OCRS",
+      current_office: input.officeDivision,
     })
     .select()
     .single();
@@ -124,7 +125,7 @@ export async function createDocument(
 
   await supabase.from("document_routing_logs").insert({
     document_id: data.id,
-    office_code: "OCRS",
+    office_code: input.officeDivision,
     status: "Pending",
     notes: "Document submitted",
   });
