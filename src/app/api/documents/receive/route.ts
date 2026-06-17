@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidReceiveDisposition } from "@/lib/dispositions";
-import { receiveDocument, toDocumentPayload } from "@/lib/documents";
+import { isValidOfficeCode } from "@/lib/offices";
+import {
+  getRoutingLogsByReference,
+  receiveDocument,
+  toDocumentPayload,
+  toRoutingLogPayload,
+} from "@/lib/documents";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -39,6 +45,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!isValidOfficeCode(currentOffice)) {
+      return NextResponse.json(
+        { error: "Office is required." },
+        { status: 400 }
+      );
+    }
+
     if (!isSupabaseConfigured()) {
       return NextResponse.json(
         {
@@ -53,12 +66,15 @@ export async function POST(request: NextRequest) {
       referenceNumber,
       receivedBy,
       status,
-      currentOffice: currentOffice || undefined,
+      currentOffice,
     });
+
+    const tracking = await getRoutingLogsByReference(referenceNumber);
 
     return NextResponse.json({
       success: true,
       document: toDocumentPayload(document),
+      tracking: tracking.map(toRoutingLogPayload),
     });
   } catch (error) {
     console.error("document receive error:", error);

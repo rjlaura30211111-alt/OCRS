@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Html5Qrcode } from "html5-qrcode";
-import { RECEIVE_DISPOSITIONS } from "@/lib/dispositions";
+import { RECEIVE_DISPOSITIONS, type ReceiveDisposition } from "@/lib/dispositions";
+import { OFFICE_CODES } from "@/lib/offices";
 import {
   formatDisplayDate,
   formatDisplayTime,
 } from "@/lib/datetime";
+import {
+  DocumentTrackingTimeline,
+  type TrackingEntry,
+} from "@/components/DocumentTrackingTimeline";
 
 export type DocumentLookup = {
   referenceNumber: string;
@@ -20,21 +25,6 @@ export type DocumentLookup = {
   timestamp: string;
   currentOffice: string | null;
 };
-
-function formatTimestamp(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
 
 function useLiveDateTime() {
   const [now, setNow] = useState(() => new Date());
@@ -84,35 +74,35 @@ function ReceiveForm({
   onSaved,
 }: {
   document: DocumentLookup;
-  onSaved: (updated: DocumentLookup) => void;
+  onSaved: (updated: DocumentLookup, tracking: TrackingEntry[]) => void;
 }) {
   const liveTime = useLiveDateTime();
-  const defaultDisposition = RECEIVE_DISPOSITIONS.includes(
-    document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number]
-  )
-    ? (document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number])
-    : RECEIVE_DISPOSITIONS[0];
 
-  const [receivedBy, setReceivedBy] = useState(document.receivedBy ?? "");
-  const [disposition, setDisposition] = useState(defaultDisposition);
+  const [office, setOffice] = useState(document.currentOffice ?? "");
+  const [receivedBy, setReceivedBy] = useState("");
+  const [disposition, setDisposition] = useState<ReceiveDisposition>(
+    RECEIVE_DISPOSITIONS[0]
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    setReceivedBy(document.receivedBy ?? "");
-    setDisposition(
-      RECEIVE_DISPOSITIONS.includes(
-        document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number]
-      )
-        ? (document.rawStatus as (typeof RECEIVE_DISPOSITIONS)[number])
-        : RECEIVE_DISPOSITIONS[0]
-    );
+    setOffice(document.currentOffice ?? "");
+    setReceivedBy("");
+    setDisposition(RECEIVE_DISPOSITIONS[0]);
     setSuccess(false);
     setError(null);
-  }, [document]);
+    // Reset form when a different document is loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [document.referenceNumber]);
 
   async function handleSubmit() {
+    if (!office.trim()) {
+      setError("Please select an office.");
+      return;
+    }
+
     if (!receivedBy.trim()) {
       setError("Please enter who received the document.");
       return;
@@ -130,6 +120,7 @@ function ReceiveForm({
           referenceNumber: document.referenceNumber,
           receivedBy: receivedBy.trim(),
           status: disposition,
+          currentOffice: office.trim(),
         }),
       });
 
@@ -139,7 +130,8 @@ function ReceiveForm({
         throw new Error(data.error ?? "Failed to save receipt.");
       }
 
-      onSaved(data.document as DocumentLookup);
+      onSaved(data.document as DocumentLookup, data.tracking ?? []);
+      setReceivedBy("");
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save receipt.");
@@ -153,6 +145,25 @@ function ReceiveForm({
       <h2 className="text-sm font-semibold text-slate-900">Receive & Disposition</h2>
 
       <div className="mt-3 space-y-3">
+        <div>
+          <label htmlFor="office" className="mb-1.5 block text-sm font-medium">
+            Office
+          </label>
+          <select
+            id="office"
+            value={office}
+            onChange={(e) => setOffice(e.target.value)}
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+          >
+            <option value="">Select office...</option>
+            {OFFICE_CODES.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <label htmlFor="received-by" className="mb-1.5 block text-sm font-medium">
             Received by
@@ -175,7 +186,7 @@ function ReceiveForm({
             id="disposition"
             value={disposition}
             onChange={(e) =>
-              setDisposition(e.target.value as (typeof RECEIVE_DISPOSITIONS)[number])
+              setDisposition(e.target.value as ReceiveDisposition)
             }
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           >
@@ -234,29 +245,6 @@ function ReceiveForm({
         )}
       </div>
     </div>
-  );
-}
-
-function SavedSummary({ document }: { document: DocumentLookup }) {
-  return (
-    <dl className="mt-3 space-y-2 rounded-lg bg-emerald-50/80 p-3 text-sm">
-      <div>
-        <dt className="font-medium text-muted">Received by</dt>
-        <dd className="mt-0.5">{document.receivedBy ?? "—"}</dd>
-      </div>
-      <div>
-        <dt className="font-medium text-muted">Disposition</dt>
-        <dd className="mt-0.5 font-semibold">{document.rawStatus}</dd>
-      </div>
-      <div>
-        <dt className="font-medium text-muted">Status</dt>
-        <dd className="mt-0.5">{document.status}</dd>
-      </div>
-      <div>
-        <dt className="font-medium text-muted">TimeStamp</dt>
-        <dd className="mt-0.5">{formatTimestamp(document.timestamp)}</dd>
-      </div>
-    </dl>
   );
 }
 
@@ -390,6 +378,43 @@ export function ReceivedDocumentCard() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tracking, setTracking] = useState<TrackingEntry[]>([]);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+
+  const fetchTracking = useCallback(async (ref: string) => {
+    setTrackingLoading(true);
+    try {
+      const response = await fetch(
+        `/api/documents/tracking?ref=${encodeURIComponent(ref)}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setTracking((data.tracking ?? []) as TrackingEntry[]);
+      } else {
+        setTracking([]);
+      }
+    } catch {
+      setTracking([]);
+    } finally {
+      setTrackingLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selected?.referenceNumber) {
+      void fetchTracking(selected.referenceNumber);
+    } else {
+      setTracking([]);
+    }
+  }, [selected?.referenceNumber, fetchTracking]);
+
+  function handleDocumentSaved(
+    updated: DocumentLookup,
+    updatedTracking: TrackingEntry[]
+  ) {
+    setSelected(updated);
+    setTracking(updatedTracking);
+  }
 
   const lookupDocument = useCallback(async (ref: string) => {
     const trimmed = ref.trim();
@@ -555,8 +580,11 @@ export function ReceivedDocumentCard() {
         {selected && (
           <>
             <DocumentSummary document={selected} />
-            <ReceiveForm document={selected} onSaved={setSelected} />
-            <SavedSummary document={selected} />
+            <DocumentTrackingTimeline
+              tracking={tracking}
+              loading={trackingLoading}
+            />
+            <ReceiveForm document={selected} onSaved={handleDocumentSaved} />
           </>
         )}
 

@@ -41,7 +41,26 @@ export type ReceiveDocumentInput = {
   referenceNumber: string;
   receivedBy: string;
   status: ReceiveDisposition;
-  currentOffice?: string;
+  currentOffice: string;
+};
+
+type RoutingLogRow = {
+  id: string;
+  document_id: string;
+  office_code: string;
+  received_by: string | null;
+  status: string;
+  logged_at: string;
+  notes: string | null;
+};
+
+export type RoutingLogEntry = {
+  id: string;
+  officeCode: string;
+  receivedBy: string | null;
+  status: string;
+  loggedAt: string;
+  notes: string | null;
 };
 
 type DocumentRow = {
@@ -156,6 +175,51 @@ export async function searchDocumentsByReference(
   return (data ?? []).map((row) => mapRow(row as DocumentRow));
 }
 
+function mapRoutingLog(row: RoutingLogRow): RoutingLogEntry {
+  return {
+    id: row.id,
+    officeCode: row.office_code,
+    receivedBy: row.received_by,
+    status: row.status,
+    loggedAt: row.logged_at,
+    notes: row.notes,
+  };
+}
+
+export async function getRoutingLogsByReference(
+  referenceNumber: string
+): Promise<RoutingLogEntry[]> {
+  const document = await getDocumentByReference(referenceNumber);
+
+  if (!document) {
+    return [];
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("document_routing_logs")
+    .select()
+    .eq("document_id", document.id)
+    .order("logged_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => mapRoutingLog(row as RoutingLogRow));
+}
+
+export function toRoutingLogPayload(entry: RoutingLogEntry) {
+  return {
+    id: entry.id,
+    officeCode: entry.officeCode,
+    receivedBy: entry.receivedBy,
+    status: entry.status,
+    loggedAt: entry.loggedAt,
+    notes: entry.notes,
+  };
+}
+
 export async function receiveDocument(
   input: ReceiveDocumentInput
 ): Promise<DocumentRecord> {
@@ -166,7 +230,10 @@ export async function receiveDocument(
     throw new Error("No Document Found");
   }
 
-  const office = input.currentOffice?.trim() || existing.currentOffice || "OCRS";
+  const office = input.currentOffice.trim();
+  if (!office) {
+    throw new Error("Office is required.");
+  }
   const receivedAt = new Date().toISOString();
 
   const { data, error } = await supabase

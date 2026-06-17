@@ -2,20 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getDocumentByReference,
   getRoutingLogsByReference,
-  toDocumentPayload,
   toRoutingLogPayload,
 } from "@/lib/documents";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json();
     const referenceNumber =
-      typeof body.referenceNumber === "string"
-        ? body.referenceNumber.trim()
-        : "";
+      request.nextUrl.searchParams.get("ref")?.trim() ?? "";
 
     if (!referenceNumber) {
       return NextResponse.json(
@@ -43,14 +39,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const tracking = await getRoutingLogsByReference(referenceNumber);
+
     return NextResponse.json({
       found: true,
-      document: toDocumentPayload(document),
+      referenceNumber,
+      tracking: tracking.map(toRoutingLogPayload),
     });
   } catch (error) {
-    console.error("document lookup error:", error);
+    console.error("document tracking error:", error);
     const message =
-      error instanceof Error ? error.message : "Lookup failed.";
+      error instanceof Error ? error.message : "Failed to load tracking.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
