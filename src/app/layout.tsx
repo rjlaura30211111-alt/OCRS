@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OCRS — Document Tracker",
+  title: "Document Tracker",
   description: "Submit reports with QR codes and track documents",
 };
 
