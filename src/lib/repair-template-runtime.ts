@@ -53,9 +53,8 @@ function repairDatePlaceholders(xml: string): string {
   );
 }
 
-export function repairTemplateIfNeeded(): Buffer {
-  const templatePath = findTemplatePath();
-  const zip = new PizZip(fs.readFileSync(templatePath));
+export function repairTemplateBuffer(input: Buffer): Buffer {
+  const zip = new PizZip(input);
   let xml = zip.file("word/document.xml")?.asText() ?? "";
 
   xml = repairSplitPlaceholders(xml);
@@ -77,11 +76,21 @@ export function repairTemplateIfNeeded(): Buffer {
   }
 
   zip.file("word/document.xml", xml);
-  const repaired = zip.generate({
+  return zip.generate({
     type: "nodebuffer",
     compression: "DEFLATE",
   }) as Buffer;
+}
 
-  fs.writeFileSync(templatePath, repaired);
+export function repairTemplateIfNeeded(): Buffer {
+  const templatePath = findTemplatePath();
+  const repaired = repairTemplateBuffer(fs.readFileSync(templatePath));
+
+  try {
+    fs.writeFileSync(templatePath, repaired);
+  } catch {
+    // Read-only filesystem (e.g. Vercel serverless).
+  }
+
   return repaired;
 }
