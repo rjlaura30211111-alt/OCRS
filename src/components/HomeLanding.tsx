@@ -77,9 +77,9 @@ const menuItems = [
   },
   {
     href: "/scan",
-    title: "Scan QR",
-    description: "Scan a document QR code to view or update routing information.",
-    action: "Open scanner",
+    title: "Received a Document",
+    description: "Search by reference number or scan QR to view document details.",
+    action: "Open",
     icon: ScanIcon,
     accent: "from-emerald-500 to-emerald-600",
     iconBg:

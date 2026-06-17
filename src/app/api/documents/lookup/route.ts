@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDisplayStatus, getDocumentByReference } from "@/lib/documents";
+import {
+  getDisplayStatus,
+  getDocumentByReference,
+  toDocumentPayload,
+} from "@/lib/documents";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -40,17 +44,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       found: true,
-      document: {
-        referenceNumber: document.referenceNumber,
-        subject: document.subject,
-        drafter: document.drafter,
-        actionRequested: document.actionRequested,
-        receivedBy: document.receivedBy,
-        status: getDisplayStatus(document.status),
-        rawStatus: document.status,
-        timestamp: document.updatedAt,
-        currentOffice: document.currentOffice,
-      },
+      document: toDocumentPayload(document),
     });
   } catch (error) {
     console.error("document lookup error:", error);

@@ -123,6 +123,45 @@ export async function getDocumentByReference(
   return data ? mapRow(data as DocumentRow) : null;
 }
 
+export async function searchDocumentsByReference(
+  query: string,
+  limit = 8
+): Promise<DocumentRecord[]> {
+  const supabase = getSupabaseAdmin();
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("documents")
+    .select()
+    .ilike("reference_number", `%${trimmed}%`)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => mapRow(row as DocumentRow));
+}
+
+export function toDocumentPayload(document: DocumentRecord) {
+  return {
+    referenceNumber: document.referenceNumber,
+    subject: document.subject,
+    drafter: document.drafter,
+    actionRequested: document.actionRequested,
+    receivedBy: document.receivedBy,
+    status: getDisplayStatus(document.status),
+    rawStatus: document.status,
+    timestamp: document.updatedAt,
+    currentOffice: document.currentOffice,
+  };
+}
+
 export function getDisplayStatus(status: DocumentStatus): string {
   if (status === "Uploaded at OLCIMS") {
     return status;
