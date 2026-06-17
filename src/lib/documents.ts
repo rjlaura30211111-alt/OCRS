@@ -229,6 +229,84 @@ export function toRoutingLogPayload(entry: RoutingLogEntry) {
   };
 }
 
+export type UpdateRoutingLogInput = {
+  id: string;
+  referenceNumber: string;
+  officeCode: string;
+  receivedBy: string;
+  status: ReceiveDisposition;
+};
+
+export async function updateRoutingLog(
+  input: UpdateRoutingLogInput
+): Promise<{ document: DocumentRecord; logs: RoutingLogEntry[] }> {
+  const supabase = getSupabaseAdmin();
+  const document = await getDocumentByReference(input.referenceNumber);
+
+  if (!document) {
+    throw new Error("No Document Found");
+  }
+
+  const { data: logRow, error: fetchError } = await supabase
+    .from("document_routing_logs")
+    .select()
+    .eq("id", input.id)
+    .eq("document_id", document.id)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new Error(fetchError.message);
+  }
+
+  if (!logRow) {
+    throw new Error("Tracking entry not found.");
+  }
+
+  const office = input.officeCode.trim();
+  if (!office) {
+    throw new Error("Office is required.");
+  }
+
+  const { error: updateLogError } = await supabase
+    .from("document_routing_logs")
+    .update({
+      office_code: office,
+      received_by: input.receivedBy.trim(),
+      status: input.status,
+    })
+    .eq("id", input.id);
+
+  if (updateLogError) {
+    throw new Error(updateLogError.message);
+  }
+
+  const logs = await getRoutingLogsByReference(input.referenceNumber);
+  const latestReceive = [...logs]
+    .reverse()
+    .find((entry) => entry.notes === "Document received");
+
+  if (latestReceive?.id === input.id) {
+    await supabase
+      .from("documents")
+      .update({
+        received_by: input.receivedBy.trim(),
+        status: input.status,
+        current_office: office,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", document.id);
+  }
+
+  const updatedDocument = await getDocumentByReference(input.referenceNumber);
+  const updatedLogs = await getRoutingLogsByReference(input.referenceNumber);
+
+  if (!updatedDocument) {
+    throw new Error("No Document Found");
+  }
+
+  return { document: updatedDocument, logs: updatedLogs };
+}
+
 export async function receiveDocument(
   input: ReceiveDocumentInput
 ): Promise<DocumentRecord> {
@@ -323,6 +401,9 @@ export function toDocumentPayload(document: DocumentRecord) {
     rawStatus: document.status,
     timestamp: document.updatedAt,
     currentOffice: document.currentOffice,
+    sentDate: document.sentDate,
+    sentTime: document.sentTime,
+    createdAt: document.createdAt,
   };
 }
 

@@ -40,10 +40,20 @@ export async function GET(request: NextRequest) {
     }
 
     const tracking = await getRoutingLogsByReference(referenceNumber);
+    const submitLog = tracking.find((entry) => entry.notes === "Document submitted");
 
     return NextResponse.json({
       found: true,
       referenceNumber,
+      document: {
+        referenceNumber: document.referenceNumber,
+        subject: document.subject,
+        drafter: document.drafter,
+        sentDate: document.sentDate,
+        sentTime: document.sentTime,
+        submitOffice: submitLog?.officeCode ?? document.currentOffice ?? "OCRS",
+        submitLoggedAt: submitLog?.loggedAt ?? document.createdAt,
+      },
       tracking: tracking.map(toRoutingLogPayload),
     });
   } catch (error) {

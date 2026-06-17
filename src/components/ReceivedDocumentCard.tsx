@@ -3,18 +3,15 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Html5Qrcode } from "html5-qrcode";
-import {
-  ACTION_REQUESTED_OPTIONS,
-  type ActionRequested,
-} from "@/lib/actions";
 import { RECEIVE_DISPOSITIONS, type ReceiveDisposition } from "@/lib/dispositions";
-import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
+import { OFFICE_OPTIONS } from "@/lib/offices";
 import {
   formatDisplayDate,
   formatDisplayTime,
 } from "@/lib/datetime";
 import {
   DocumentTrackingTimeline,
+  type SubmissionInfo,
   type TrackingEntry,
 } from "@/components/DocumentTrackingTimeline";
 
@@ -46,183 +43,6 @@ function useLiveDateTime() {
     time,
     label: `${formatDisplayDate(date)} · ${formatDisplayTime(time)}`,
   };
-}
-
-function EditableDocumentCard({
-  document,
-  onUpdated,
-}: {
-  document: DocumentLookup;
-  onUpdated: (updated: DocumentLookup) => void;
-}) {
-  const [subject, setSubject] = useState(document.subject);
-  const [drafter, setDrafter] = useState(document.drafter);
-  const [actionRequested, setActionRequested] = useState<ActionRequested>(
-    ACTION_REQUESTED_OPTIONS.includes(document.actionRequested as ActionRequested)
-      ? (document.actionRequested as ActionRequested)
-      : ACTION_REQUESTED_OPTIONS[0]
-  );
-  const [office, setOffice] = useState(document.currentOffice ?? "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    setSubject(document.subject);
-    setDrafter(document.drafter);
-    setActionRequested(
-      ACTION_REQUESTED_OPTIONS.includes(document.actionRequested as ActionRequested)
-        ? (document.actionRequested as ActionRequested)
-        : ACTION_REQUESTED_OPTIONS[0]
-    );
-    setOffice(document.currentOffice ?? "");
-    setSuccess(false);
-    setError(null);
-  }, [document]);
-
-  async function handleSave() {
-    if (!subject.trim() || !drafter.trim()) {
-      setError("Subject and drafter are required.");
-      return;
-    }
-    if (!office) {
-      setError("Please select an office.");
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-    setSuccess(false);
-
-    try {
-      const response = await fetch("/api/documents/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          referenceNumber: document.referenceNumber,
-          subject: subject.trim(),
-          drafter: drafter.trim(),
-          actionRequested,
-          currentOffice: office,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to save changes.");
-      }
-
-      onUpdated(data.document as DocumentLookup);
-      setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save changes.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-      <h2 className="font-semibold text-slate-900">Document Details</h2>
-
-      <div>
-        <label className="mb-1.5 block font-medium text-muted">
-          Reference Number
-        </label>
-        <input
-          type="text"
-          readOnly
-          value={document.referenceNumber}
-          className="w-full rounded-lg border border-border bg-white px-4 py-2.5 font-mono text-sm text-slate-700"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="edit-subject" className="mb-1.5 block font-medium text-muted">
-          Subject
-        </label>
-        <input
-          id="edit-subject"
-          type="text"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          className="w-full rounded-lg border border-border bg-white px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="edit-drafter" className="mb-1.5 block font-medium text-muted">
-          Drafter
-        </label>
-        <input
-          id="edit-drafter"
-          type="text"
-          value={drafter}
-          onChange={(e) => setDrafter(e.target.value)}
-          className="w-full rounded-lg border border-border bg-white px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="edit-action" className="mb-1.5 block font-medium text-muted">
-          Action Requested
-        </label>
-        <select
-          id="edit-action"
-          value={actionRequested}
-          onChange={(e) => setActionRequested(e.target.value as ActionRequested)}
-          className="w-full rounded-lg border border-border bg-white px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-        >
-          {ACTION_REQUESTED_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="edit-office" className="mb-1.5 block font-medium text-muted">
-          Office/Division
-        </label>
-        <select
-          id="edit-office"
-          value={office}
-          onChange={(e) => setOffice(e.target.value)}
-          className="w-full rounded-lg border border-border bg-white px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-        >
-          <option value="">Select office...</option>
-          {OFFICE_OPTIONS.map((code) => (
-            <option key={code} value={code}>
-              {code}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="w-full rounded-lg border border-emerald-600 bg-white px-4 py-2.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60"
-      >
-        {saving ? "Saving..." : "Save Changes"}
-      </button>
-
-      {success && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Document details updated.
-        </p>
-      )}
-
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
-  );
 }
 
 function ReceiveForm({
@@ -535,6 +355,7 @@ export function ReceivedDocumentCard() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tracking, setTracking] = useState<TrackingEntry[]>([]);
+  const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
 
   const fetchTracking = useCallback(async (ref: string) => {
@@ -546,11 +367,27 @@ export function ReceivedDocumentCard() {
       const data = await response.json();
       if (response.ok) {
         setTracking((data.tracking ?? []) as TrackingEntry[]);
+        const doc = data.document;
+        if (doc) {
+          setSubmission({
+            referenceNumber: doc.referenceNumber,
+            subject: doc.subject,
+            drafter: doc.drafter,
+            sentDate: doc.sentDate,
+            sentTime: doc.sentTime,
+            submitOffice: doc.submitOffice,
+            submitLoggedAt: doc.submitLoggedAt,
+          });
+        } else {
+          setSubmission(null);
+        }
       } else {
         setTracking([]);
+        setSubmission(null);
       }
     } catch {
       setTracking([]);
+      setSubmission(null);
     } finally {
       setTrackingLoading(false);
     }
@@ -561,6 +398,7 @@ export function ReceivedDocumentCard() {
       void fetchTracking(selected.referenceNumber);
     } else {
       setTracking([]);
+      setSubmission(null);
     }
   }, [selected?.referenceNumber, fetchTracking]);
 
@@ -676,7 +514,7 @@ export function ReceivedDocumentCard() {
 
   return (
     <>
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             Received a Document
@@ -735,13 +573,12 @@ export function ReceivedDocumentCard() {
 
         {selected && (
           <>
-            <EditableDocumentCard
-              document={selected}
-              onUpdated={setSelected}
-            />
             <DocumentTrackingTimeline
+              submission={submission}
               tracking={tracking}
+              referenceNumber={selected.referenceNumber}
               loading={trackingLoading}
+              onTrackingUpdated={setTracking}
             />
             <ReceiveForm document={selected} onSaved={handleDocumentSaved} />
           </>
