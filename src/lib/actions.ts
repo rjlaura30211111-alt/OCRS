@@ -1,0 +1,21 @@
+export const ACTION_REQUESTED_OPTIONS = [
+  "APPROVAL/SIGNATURE",
+  "FOR APPROPRIATE STAFF ACTION",
+  "FOR COMMENT/RECOMMENDATION",
+  "REPLY DIRECTLY TO THE WRITER",
+  "PREPARE REPLY FOR SIGNATURE OF REGIONAL DIRECTOR",
+  "ATTN TO HWI / HWI INSIDE / REMARKS",
+  "REWRITE / RETYPE",
+  "STUDY / REVIEW / INVESTIGATE",
+  "INFORMATION / NOTATION",
+  "REFERENCE / FILE",
+  "DISPATCH",
+  "FOR WIDEST DISSEMINATION",
+  "SEE ME",
+] as const;
+
+export type ActionRequested = (typeof ACTION_REQUESTED_OPTIONS)[number];
+
+export function isValidAction(value: string): value is ActionRequested {
+  return ACTION_REQUESTED_OPTIONS.includes(value as ActionRequested);
+}
