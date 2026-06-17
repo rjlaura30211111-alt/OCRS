@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isValidReceiveDisposition } from "@/lib/dispositions";
+import { isValidAction } from "@/lib/actions";
+import { toDocumentPayload, updateDocument } from "@/lib/documents";
 import { isValidOfficeOption } from "@/lib/offices";
-import {
-  getRoutingLogsByReference,
-  receiveDocument,
-  toDocumentPayload,
-  toRoutingLogPayload,
-} from "@/lib/documents";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -18,9 +13,12 @@ export async function POST(request: NextRequest) {
       typeof body.referenceNumber === "string"
         ? body.referenceNumber.trim()
         : "";
-    const receivedBy =
-      typeof body.receivedBy === "string" ? body.receivedBy.trim() : "";
-    const status = typeof body.status === "string" ? body.status.trim() : "";
+    const subject =
+      typeof body.subject === "string" ? body.subject.trim() : "";
+    const drafter =
+      typeof body.drafter === "string" ? body.drafter.trim() : "";
+    const actionRequested =
+      typeof body.actionRequested === "string" ? body.actionRequested.trim() : "";
     const currentOffice =
       typeof body.currentOffice === "string" ? body.currentOffice.trim() : "";
 
@@ -31,16 +29,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!receivedBy) {
-      return NextResponse.json(
-        { error: "Received by is required." },
-        { status: 400 }
-      );
+    if (!subject) {
+      return NextResponse.json({ error: "Subject is required." }, { status: 400 });
     }
 
-    if (!isValidReceiveDisposition(status)) {
+    if (!drafter) {
+      return NextResponse.json({ error: "Drafter is required." }, { status: 400 });
+    }
+
+    if (!isValidAction(actionRequested)) {
       return NextResponse.json(
-        { error: "Invalid disposition." },
+        { error: "Invalid action requested." },
         { status: 400 }
       );
     }
@@ -62,24 +61,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const document = await receiveDocument({
+    const document = await updateDocument({
       referenceNumber,
-      receivedBy,
-      status,
+      subject,
+      drafter,
+      actionRequested,
       currentOffice,
     });
-
-    const tracking = await getRoutingLogsByReference(referenceNumber);
 
     return NextResponse.json({
       success: true,
       document: toDocumentPayload(document),
-      tracking: tracking.map(toRoutingLogPayload),
     });
   } catch (error) {
-    console.error("document receive error:", error);
+    console.error("document update error:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to record receipt.";
+      error instanceof Error ? error.message : "Failed to update document.";
     const statusCode = message === "No Document Found" ? 404 : 500;
     return NextResponse.json({ error: message }, { status: statusCode });
   }

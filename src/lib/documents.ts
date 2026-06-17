@@ -45,6 +45,14 @@ export type ReceiveDocumentInput = {
   currentOffice: string;
 };
 
+export type UpdateDocumentInput = {
+  referenceNumber: string;
+  subject: string;
+  drafter: string;
+  actionRequested: ActionRequested;
+  currentOffice: string;
+};
+
 type RoutingLogRow = {
   id: string;
   document_id: string;
@@ -264,6 +272,41 @@ export async function receiveDocument(
 
   if (logError) {
     throw new Error(logError.message);
+  }
+
+  return mapRow(data as DocumentRow);
+}
+
+export async function updateDocument(
+  input: UpdateDocumentInput
+): Promise<DocumentRecord> {
+  const supabase = getSupabaseAdmin();
+  const existing = await getDocumentByReference(input.referenceNumber);
+
+  if (!existing) {
+    throw new Error("No Document Found");
+  }
+
+  const office = input.currentOffice.trim();
+  if (!office) {
+    throw new Error("Office is required.");
+  }
+
+  const { data, error } = await supabase
+    .from("documents")
+    .update({
+      subject: input.subject.trim(),
+      drafter: input.drafter.trim(),
+      action_requested: input.actionRequested,
+      current_office: office,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", existing.id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
   }
 
   return mapRow(data as DocumentRow);

@@ -9,13 +9,13 @@ import {
   getDefaultTimeValue,
 } from "@/lib/datetime";
 import { ConfirmSubmitModal } from "@/components/ConfirmSubmitModal";
-import { OFFICE_DIVISIONS, type OfficeDivision } from "@/lib/offices";
+import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
 
 export function SubmitReportCard() {
   const [subject, setSubject] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [drafter, setDrafter] = useState("");
-  const [officeDivision, setOfficeDivision] = useState<OfficeDivision | "">("");
+  const [officeDivision, setOfficeDivision] = useState<OfficeOption | "">("");
   const [date, setDate] = useState(getDefaultDateValue);
   const [time, setTime] = useState(getDefaultTimeValue);
   const [actionRequested, setActionRequested] = useState<ActionRequested>(
@@ -167,12 +167,12 @@ export function SubmitReportCard() {
               id="office"
               value={officeDivision}
               onChange={(e) =>
-                setOfficeDivision(e.target.value as OfficeDivision)
+                setOfficeDivision(e.target.value as OfficeOption)
               }
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             >
               <option value="">Select office/division...</option>
-              {OFFICE_DIVISIONS.map((office) => (
+              {OFFICE_OPTIONS.map((office) => (
                 <option key={office} value={office}>
                   {office}
                 </option>
