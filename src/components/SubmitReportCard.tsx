@@ -13,6 +13,7 @@ import { ConfirmSubmitModal } from "@/components/ConfirmSubmitModal";
 export function SubmitReportCard() {
   const [subject, setSubject] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
+  const [drafter, setDrafter] = useState("");
   const [date, setDate] = useState(getDefaultDateValue);
   const [time, setTime] = useState(getDefaultTimeValue);
   const [actionRequested, setActionRequested] = useState<ActionRequested>(
@@ -29,6 +30,10 @@ export function SubmitReportCard() {
     }
     if (!referenceNumber.trim()) {
       setError("Please enter a reference number.");
+      return false;
+    }
+    if (!drafter.trim()) {
+      setError("Please enter a drafter.");
       return false;
     }
     if (!date) {
@@ -61,6 +66,7 @@ export function SubmitReportCard() {
         body: JSON.stringify({
           subject: subject.trim(),
           referenceNumber: referenceNumber.trim(),
+          drafter: drafter.trim(),
           date,
           time,
           actionRequested,
@@ -94,7 +100,9 @@ export function SubmitReportCard() {
     <>
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-lg">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">OCRS</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Document Tracker
+          </h1>
           <p className="mt-1 text-sm text-muted">Submit Report</p>
         </div>
 
@@ -126,6 +134,20 @@ export function SubmitReportCard() {
               value={referenceNumber}
               onChange={(e) => setReferenceNumber(e.target.value)}
               placeholder="e.g. REF-2026-001234"
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="drafter" className="mb-2 block text-sm font-medium">
+              Drafter:
+            </label>
+            <input
+              id="drafter"
+              type="text"
+              value={drafter}
+              onChange={(e) => setDrafter(e.target.value)}
+              placeholder="e.g. Juan Dela Cruz"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
@@ -202,6 +224,7 @@ export function SubmitReportCard() {
         open={showConfirm}
         subject={subject.trim()}
         referenceNumber={referenceNumber.trim()}
+        drafter={drafter.trim()}
         actionRequested={actionRequested}
         submitting={submitting}
         onConfirm={handleConfirmSubmit}

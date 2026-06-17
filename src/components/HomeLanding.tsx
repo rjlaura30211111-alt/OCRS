@@ -48,30 +48,6 @@ function ScanIcon({ className = "h-7 w-7" }: { className?: string }) {
   );
 }
 
-function TrackIcon({ className = "h-7 w-7" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.75}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
-      />
-    </svg>
-  );
-}
-
 function ChevronIcon() {
   return (
     <svg
@@ -109,17 +85,6 @@ const menuItems = [
     iconBg:
       "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white",
     ring: "group-hover:ring-emerald-200",
-  },
-  {
-    href: "/track",
-    title: "Track My Document",
-    description: "Look up the status and location of a submitted document.",
-    action: "Track document",
-    icon: TrackIcon,
-    accent: "from-violet-500 to-violet-600",
-    iconBg:
-      "bg-violet-50 text-violet-600 group-hover:bg-violet-600 group-hover:text-white",
-    ring: "group-hover:ring-violet-200",
   },
 ] as const;
 
@@ -166,7 +131,7 @@ export function HomeLanding() {
           </p>
         </header>
 
-        <div className="grid gap-2 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-5">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
