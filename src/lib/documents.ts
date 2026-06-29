@@ -200,6 +200,32 @@ export async function searchDocumentsByReference(
   return (data ?? []).map((row) => mapRow(row as DocumentRow));
 }
 
+export async function listDocumentsByOffice(
+  office: string,
+  limit = 50
+): Promise<DocumentRecord[]> {
+  const supabase = getSupabaseAdmin();
+  const trimmed = office.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("documents")
+    .select()
+    .eq("current_office", trimmed)
+    .neq("status", "Uploaded at OLCIMS")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    rethrowDbError(error);
+  }
+
+  return (data ?? []).map((row) => mapRow(row as DocumentRow));
+}
+
 function mapRoutingLog(row: RoutingLogRow): RoutingLogEntry {
   return {
     id: row.id,

@@ -14,6 +14,12 @@ import {
   type SubmissionInfo,
   type TrackingEntry,
 } from "@/components/DocumentTrackingTimeline";
+import {
+  getSavedInboxOffice,
+  getSavedReceivedByName,
+  OfficeInbox,
+  syncReceiveDefaults,
+} from "@/components/OfficeInbox";
 
 export type DocumentLookup = {
   referenceNumber: string;
@@ -25,6 +31,8 @@ export type DocumentLookup = {
   rawStatus: string;
   timestamp: string;
   currentOffice: string | null;
+  sentDate?: string;
+  sentTime?: string;
 };
 
 function useLiveDateTime() {
@@ -54,9 +62,11 @@ function useLiveDateTime() {
 function ReceiveForm({
   document,
   onSaved,
+  onReceiveNext,
 }: {
   document: DocumentLookup;
   onSaved: (updated: DocumentLookup, tracking: TrackingEntry[]) => void;
+  onReceiveNext?: () => void;
 }) {
   const liveTime = useLiveDateTime();
 
@@ -70,8 +80,8 @@ function ReceiveForm({
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    setOffice(document.currentOffice ?? "");
-    setReceivedBy("");
+    setOffice(document.currentOffice ?? getSavedInboxOffice() ?? "");
+    setReceivedBy(getSavedReceivedByName());
     setDisposition(RECEIVE_DISPOSITIONS[0]);
     setSuccess(false);
     setError(null);
@@ -113,7 +123,7 @@ function ReceiveForm({
       }
 
       onSaved(data.document as DocumentLookup, data.tracking ?? []);
-      setReceivedBy("");
+      syncReceiveDefaults(office.trim(), receivedBy.trim());
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save receipt.");
@@ -215,9 +225,20 @@ function ReceiveForm({
         </button>
 
         {success && (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-            Receipt saved at {liveTime.label}
-          </p>
+          <div className="space-y-2">
+            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              Receipt saved at {liveTime.label}
+            </p>
+            {onReceiveNext && (
+              <button
+                type="button"
+                onClick={onReceiveNext}
+                className="w-full rounded-lg border border-emerald-600 bg-white px-4 py-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50"
+              >
+                Receive Another Document
+              </button>
+            )}
+          </div>
         )}
 
         {error && (
@@ -363,6 +384,7 @@ export function ReceivedDocumentCard() {
   const [tracking, setTracking] = useState<TrackingEntry[]>([]);
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
+  const [inboxRefreshKey, setInboxRefreshKey] = useState(0);
 
   const fetchTracking = useCallback(async (ref: string) => {
     setTrackingLoading(true);
@@ -414,6 +436,24 @@ export function ReceivedDocumentCard() {
   ) {
     setSelected(updated);
     setTracking(updatedTracking);
+    setInboxRefreshKey((key) => key + 1);
+  }
+
+  function handleInboxSelect(document: DocumentLookup) {
+    setReferenceNumber(document.referenceNumber);
+    setSelected(document);
+    setNotFound(false);
+    setShowSuggestions(false);
+  }
+
+  function handleReceiveNext() {
+    setSelected(null);
+    setReferenceNumber("");
+    setShowSuggestions(false);
+    setSubmission(null);
+    setTracking([]);
+    setInboxRefreshKey((key) => key + 1);
+    setScannerOpen(true);
   }
 
   const lookupDocument = useCallback(async (ref: string) => {
@@ -528,6 +568,12 @@ export function ReceivedDocumentCard() {
           <p className="mt-1 text-sm text-muted">Document Tracker</p>
         </div>
 
+        <OfficeInbox
+          selectedReference={selected?.referenceNumber ?? null}
+          onSelect={handleInboxSelect}
+          refreshKey={inboxRefreshKey}
+        />
+
         <label htmlFor="reference-search" className="mb-2 block text-sm font-medium">
           Enter Reference Number
         </label>
@@ -586,7 +632,11 @@ export function ReceivedDocumentCard() {
               loading={trackingLoading}
               onTrackingUpdated={setTracking}
             />
-            <ReceiveForm document={selected} onSaved={handleDocumentSaved} />
+            <ReceiveForm
+              document={selected}
+              onSaved={handleDocumentSaved}
+              onReceiveNext={handleReceiveNext}
+            />
           </>
         )}
 
