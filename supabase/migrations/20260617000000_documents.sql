@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS documents (
       'Pending',
       'For Checking',
       'Approved',
-      'For Approval',
       'Return for Correction',
       'Uploaded at OLCIMS'
     )

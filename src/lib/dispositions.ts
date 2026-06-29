@@ -1,7 +1,6 @@
 export const RECEIVE_DISPOSITIONS = [
   "For Checking",
   "Approved",
-  "For Approval",
   "Return for Correction",
   "Uploaded at OLCIMS",
 ] as const;

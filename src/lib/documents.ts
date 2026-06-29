@@ -25,7 +25,6 @@ export const DOCUMENT_STATUSES = [
   "Pending",
   "For Checking",
   "Approved",
-  "For Approval",
   "Return for Correction",
   "Uploaded at OLCIMS",
 ] as const;

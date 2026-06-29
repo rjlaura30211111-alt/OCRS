@@ -67,11 +67,6 @@ function dispositionTone(status: string): {
         badge: "bg-amber-400/20 text-amber-100 ring-amber-300/30",
         accent: "from-amber-500/20",
       };
-    case "For Approval":
-      return {
-        badge: "bg-sky-400/20 text-sky-100 ring-sky-300/30",
-        accent: "from-sky-500/20",
-      };
     case "Return for Correction":
       return {
         badge: "bg-orange-400/20 text-orange-100 ring-orange-300/30",
