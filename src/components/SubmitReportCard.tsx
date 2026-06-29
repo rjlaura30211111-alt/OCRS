@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ACTION_REQUESTED_OPTIONS, type ActionRequested } from "@/lib/actions";
 import {
   formatDisplayDate,
@@ -16,14 +16,21 @@ export function SubmitReportCard() {
   const [referenceNumber, setReferenceNumber] = useState("");
   const [drafter, setDrafter] = useState("");
   const [officeDivision, setOfficeDivision] = useState<OfficeOption | "">("");
-  const [date, setDate] = useState(getDefaultDateValue);
-  const [time, setTime] = useState(getDefaultTimeValue);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [ready, setReady] = useState(false);
   const [actionRequested, setActionRequested] = useState<ActionRequested>(
     ACTION_REQUESTED_OPTIONS[0]
   );
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDate(getDefaultDateValue());
+    setTime(getDefaultTimeValue());
+    setReady(true);
+  }, []);
 
   function validateForm(): boolean {
     if (!subject.trim()) {
@@ -242,9 +249,11 @@ export function SubmitReportCard() {
             </p>
           )}
 
-          <p className="text-center text-xs text-muted">
-            {formatDisplayDate(date)} · {formatDisplayTime(time)}
-          </p>
+          {ready && date && time && (
+            <p className="text-center text-xs text-muted">
+              {formatDisplayDate(date)} · {formatDisplayTime(time)}
+            </p>
+          )}
         </div>
       </div>
 

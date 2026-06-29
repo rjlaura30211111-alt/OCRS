@@ -2,6 +2,25 @@ import type { ActionRequested } from "@/lib/actions";
 import type { ReceiveDisposition } from "@/lib/dispositions";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
+function rethrowDbError(
+  error: { code?: string; message?: string },
+  duplicateMessage?: string
+): never {
+  if (error.code === "23505" && duplicateMessage) {
+    throw new Error(duplicateMessage);
+  }
+
+  const message = error.message ?? "Database error.";
+
+  if (/fetch failed|ENOTFOUND|ECONNREFUSED|network/i.test(message)) {
+    throw new Error(
+      "Could not connect to Supabase. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, and ensure the project is active."
+    );
+  }
+
+  throw new Error(message);
+}
+
 export const DOCUMENT_STATUSES = [
   "Pending",
   "For Checking",
@@ -125,10 +144,7 @@ export async function createDocument(
     .single();
 
   if (error) {
-    if (error.code === "23505") {
-      throw new Error("Reference number already exists.");
-    }
-    throw new Error(error.message);
+    rethrowDbError(error, "Reference number already exists.");
   }
 
   await supabase.from("document_routing_logs").insert({
@@ -153,7 +169,7 @@ export async function getDocumentByReference(
     .maybeSingle();
 
   if (error) {
-    throw new Error(error.message);
+    rethrowDbError(error);
   }
 
   return data ? mapRow(data as DocumentRow) : null;
@@ -178,7 +194,7 @@ export async function searchDocumentsByReference(
     .limit(limit);
 
   if (error) {
-    throw new Error(error.message);
+    rethrowDbError(error);
   }
 
   return (data ?? []).map((row) => mapRow(row as DocumentRow));
@@ -212,7 +228,7 @@ export async function getRoutingLogsByReference(
     .order("logged_at", { ascending: true });
 
   if (error) {
-    throw new Error(error.message);
+    rethrowDbError(error);
   }
 
   return (data ?? []).map((row) => mapRoutingLog(row as RoutingLogRow));
@@ -255,7 +271,7 @@ export async function updateRoutingLog(
     .maybeSingle();
 
   if (fetchError) {
-    throw new Error(fetchError.message);
+    rethrowDbError(fetchError);
   }
 
   if (!logRow) {
@@ -277,7 +293,7 @@ export async function updateRoutingLog(
     .eq("id", input.id);
 
   if (updateLogError) {
-    throw new Error(updateLogError.message);
+    rethrowDbError(updateLogError);
   }
 
   const logs = await getRoutingLogsByReference(input.referenceNumber);
@@ -336,7 +352,7 @@ export async function receiveDocument(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    rethrowDbError(error);
   }
 
   const { error: logError } = await supabase.from("document_routing_logs").insert({
@@ -349,7 +365,7 @@ export async function receiveDocument(
   });
 
   if (logError) {
-    throw new Error(logError.message);
+    rethrowDbError(logError);
   }
 
   return mapRow(data as DocumentRow);
@@ -384,7 +400,7 @@ export async function updateDocument(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    rethrowDbError(error);
   }
 
   return mapRow(data as DocumentRow);

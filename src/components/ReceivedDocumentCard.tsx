@@ -28,12 +28,17 @@ export type DocumentLookup = {
 };
 
 function useLiveDateTime() {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  if (!now) {
+    return { date: "", time: "", label: "", ready: false };
+  }
 
   const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
@@ -42,6 +47,7 @@ function useLiveDateTime() {
     date,
     time,
     label: `${formatDisplayDate(date)} · ${formatDisplayTime(time)}`,
+    ready: true,
   };
 }
 
@@ -180,7 +186,7 @@ function ReceiveForm({
             <input
               type="text"
               readOnly
-              value={formatDisplayDate(liveTime.date)}
+              value={liveTime.ready ? formatDisplayDate(liveTime.date) : "—"}
               className="w-full rounded-lg border border-border bg-slate-50 px-4 py-3 text-sm text-muted"
             />
           </div>
@@ -189,7 +195,7 @@ function ReceiveForm({
             <input
               type="text"
               readOnly
-              value={formatDisplayTime(liveTime.time)}
+              value={liveTime.ready ? formatDisplayTime(liveTime.time) : "—"}
               className="w-full rounded-lg border border-border bg-slate-50 px-4 py-3 text-sm text-muted"
             />
           </div>
