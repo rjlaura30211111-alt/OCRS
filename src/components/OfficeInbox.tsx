@@ -87,7 +87,8 @@ export function OfficeInbox({
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Office Inbox</h2>
           <p className="mt-0.5 text-xs text-muted">
-            Documents currently at your office — tap to open, receive, or edit.
+            Documents routed to your office. A document leaves this list once
+            another office logs receipt.
           </p>
         </div>
         {office && results.length > 0 && (

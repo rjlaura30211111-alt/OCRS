@@ -65,7 +65,11 @@ function ReceiveForm({
   onReceiveNext,
 }: {
   document: DocumentLookup;
-  onSaved: (updated: DocumentLookup, tracking: TrackingEntry[]) => void;
+  onSaved: (
+    updated: DocumentLookup,
+    tracking: TrackingEntry[],
+    previousOffice?: string | null
+  ) => void;
   onReceiveNext?: () => void;
 }) {
   const liveTime = useLiveDateTime();
@@ -78,12 +82,14 @@ function ReceiveForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [movedToOffice, setMovedToOffice] = useState<string | null>(null);
 
   useEffect(() => {
     setOffice(document.currentOffice ?? getSavedInboxOffice() ?? "");
     setReceivedBy(getSavedReceivedByName());
     setDisposition(RECEIVE_DISPOSITIONS[0]);
     setSuccess(false);
+    setMovedToOffice(null);
     setError(null);
     // Reset form when a different document is loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,6 +109,9 @@ function ReceiveForm({
     setSaving(true);
     setError(null);
     setSuccess(false);
+    setMovedToOffice(null);
+
+    const previousOffice = document.currentOffice;
 
     try {
       const response = await fetch("/api/documents/receive", {
@@ -122,8 +131,20 @@ function ReceiveForm({
         throw new Error(data.error ?? "Failed to save receipt.");
       }
 
-      onSaved(data.document as DocumentLookup, data.tracking ?? []);
+      onSaved(
+        data.document as DocumentLookup,
+        data.tracking ?? [],
+        previousOffice
+      );
       syncReceiveDefaults(office.trim(), receivedBy.trim());
+      const updated = data.document as DocumentLookup;
+      if (
+        previousOffice &&
+        updated.currentOffice &&
+        previousOffice !== updated.currentOffice
+      ) {
+        setMovedToOffice(updated.currentOffice);
+      }
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save receipt.");
@@ -154,6 +175,14 @@ function ReceiveForm({
               </option>
             ))}
           </select>
+          {document.currentOffice &&
+            office &&
+            office !== document.currentOffice && (
+              <p className="mt-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Saving will route this document to <strong>{office}</strong> and
+                remove it from the {document.currentOffice} inbox.
+              </p>
+            )}
         </div>
 
         <div>
@@ -228,6 +257,13 @@ function ReceiveForm({
           <div className="space-y-2">
             <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
               Receipt saved at {liveTime.label}
+              {movedToOffice && (
+                <>
+                  {" "}
+                  — document moved to <strong>{movedToOffice}</strong> and removed
+                  from the previous office inbox.
+                </>
+              )}
             </p>
             {onReceiveNext && (
               <button
@@ -432,11 +468,28 @@ export function ReceivedDocumentCard() {
 
   function handleDocumentSaved(
     updated: DocumentLookup,
-    updatedTracking: TrackingEntry[]
+    updatedTracking: TrackingEntry[],
+    previousOffice?: string | null
   ) {
+    setInboxRefreshKey((key) => key + 1);
+
+    const inboxOffice = getSavedInboxOffice();
+    const routedAway =
+      inboxOffice &&
+      updated.currentOffice &&
+      updated.currentOffice !== inboxOffice &&
+      previousOffice === inboxOffice;
+
+    if (routedAway) {
+      setSelected(null);
+      setReferenceNumber("");
+      setSubmission(null);
+      setTracking([]);
+      return;
+    }
+
     setSelected(updated);
     setTracking(updatedTracking);
-    setInboxRefreshKey((key) => key + 1);
   }
 
   function handleInboxSelect(document: DocumentLookup) {

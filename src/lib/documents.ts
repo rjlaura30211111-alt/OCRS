@@ -211,6 +211,8 @@ export async function listDocumentsByOffice(
     return [];
   }
 
+  // Inbox = documents whose current location is this office. When another
+  // office logs receipt, current_office updates and the document drops out.
   const { data, error } = await supabase
     .from("documents")
     .select()
