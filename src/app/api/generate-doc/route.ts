@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
     const docBuffer = await fillWordTemplate({
       subject,
       referenceNumber,
+      drafter,
       date,
       time,
       actionRequested,

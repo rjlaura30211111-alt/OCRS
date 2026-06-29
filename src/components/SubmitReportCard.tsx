@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ACTION_REQUESTED_OPTIONS, type ActionRequested } from "@/lib/actions";
 import {
   formatDisplayDate,
@@ -9,7 +9,12 @@ import {
   getDefaultTimeValue,
 } from "@/lib/datetime";
 import { ConfirmSubmitModal } from "@/components/ConfirmSubmitModal";
+import { SubmitAlertModal } from "@/components/SubmitAlertModal";
 import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
+
+function isDuplicateReferenceError(message: string): boolean {
+  return /reference number already exists/i.test(message);
+}
 
 export function SubmitReportCard() {
   const [subject, setSubject] = useState("");
@@ -25,6 +30,11 @@ export function SubmitReportCard() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
+  const referenceInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDate(getDefaultDateValue());
@@ -104,10 +114,28 @@ export function SubmitReportCard() {
 
       setShowConfirm(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit report.");
+      const message =
+        err instanceof Error ? err.message : "Failed to submit report.";
+
+      if (isDuplicateReferenceError(message)) {
+        setShowConfirm(false);
+        setError(null);
+        setAlertModal({
+          title: "Reference Number Already Exists",
+          message:
+            "This reference number is already registered in the system. Please enter a different reference number and try again.",
+        });
+      } else {
+        setError(message);
+      }
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleAlertClose() {
+    setAlertModal(null);
+    window.setTimeout(() => referenceInputRef.current?.focus(), 0);
   }
 
   return (
@@ -144,6 +172,7 @@ export function SubmitReportCard() {
             </label>
             <input
               id="reference"
+              ref={referenceInputRef}
               type="text"
               value={referenceNumber}
               onChange={(e) => setReferenceNumber(e.target.value)}
@@ -267,6 +296,13 @@ export function SubmitReportCard() {
         submitting={submitting}
         onConfirm={handleConfirmSubmit}
         onCancel={() => setShowConfirm(false)}
+      />
+
+      <SubmitAlertModal
+        open={alertModal !== null}
+        title={alertModal?.title ?? ""}
+        message={alertModal?.message ?? ""}
+        onClose={handleAlertClose}
       />
     </>
   );

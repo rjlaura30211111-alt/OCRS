@@ -13,6 +13,7 @@ export { TEMPLATE_FILENAME };
 export type FillReportInput = {
   subject: string;
   referenceNumber: string;
+  drafter: string;
   date: string;
   time: string;
   actionRequested: ActionRequested;
@@ -22,6 +23,7 @@ export type FillReportInput = {
 export const TEMPLATE_PLACEHOLDERS = {
   subject: "{subject}",
   referenceNumber: "{referenceNumber}",
+  drafter: "{drafter}",
   date: "{date}",
   time: "{time}",
   qrCode: "{%qrCode}",
@@ -83,6 +85,7 @@ export async function fillWordTemplate(input: FillReportInput): Promise<Buffer> 
     doc.render({
       subject: input.subject.trim(),
       referenceNumber: input.referenceNumber.trim(),
+      drafter: input.drafter.trim(),
       date: formatDisplayDate(input.date),
       time: formatDisplayTime(input.time),
       qrCode: input.qrPng.toString("base64"),

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 type ConfirmSubmitModalProps = {
   open: boolean;
   subject: string;
@@ -23,12 +25,30 @@ export function ConfirmSubmitModal({
   onConfirm,
   onCancel,
 }: ConfirmSubmitModalProps) {
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[1px]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-submit-title"
+    >
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
-        <h2 className="text-lg font-semibold">Confirmation</h2>
+        <h2 id="confirm-submit-title" className="text-lg font-semibold">Confirmation</h2>
         <p className="mt-2 text-sm text-muted">
           Are you sure you want to submit this report? Pls Check the Information
         </p>

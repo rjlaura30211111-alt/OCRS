@@ -9,6 +9,7 @@ const REQUIRED_TAGS = [
   "{referenceNumber}",
   "{date}",
   "{time}",
+  "{drafter}",
 ];
 
 function repairSplitPlaceholders(xml: string): string {
@@ -33,6 +34,27 @@ function repairSplitPlaceholders(xml: string): string {
   }
 
   return xml.slice(0, paragraphStart) + QR_REFERENCE_BLOCK + xml.slice(paragraphEnd);
+}
+
+function repairPreparedByPlaceholder(xml: string): string {
+  if (xml.includes("{drafter}")) {
+    return xml;
+  }
+
+  const preparedByRun =
+    /<w:r w:rsidR="00E026C8"><w:rPr>[\s\S]*?<\/w:rPr><w:t>Pat Renzo T Ranas<\/w:t><\/w:r>/;
+
+  if (preparedByRun.test(xml)) {
+    return xml.replace(
+      preparedByRun,
+      `<w:r w:rsidR="00E026C8"><w:rPr><w:rFonts w:ascii="Arial" w:eastAsia="Times New Roman" w:hAnsi="Arial" w:cs="Arial"/><w:color w:val="000000"/><w:sz w:val="18"/><w:szCs w:val="20"/><w:u w:val="single"/></w:rPr><w:t>{drafter}</w:t></w:r>`
+    );
+  }
+
+  return xml.replace(
+    /(<w:t xml:space="preserve">Prepared by: <\/w:t><\/w:r>)(<w:r[^>]*>[\s\S]*?<w:t>)[^<{][^<]*(<\/w:t><\/w:r>)/,
+    `$1<w:r w:rsidR="00E026C8"><w:rPr><w:rFonts w:ascii="Arial" w:eastAsia="Times New Roman" w:hAnsi="Arial" w:cs="Arial"/><w:color w:val="000000"/><w:sz w:val="18"/><w:szCs w:val="20"/><w:u w:val="single"/></w:rPr><w:t>{drafter}</w:t></w:r>`
+  );
 }
 
 function repairDatePlaceholders(xml: string): string {
@@ -60,6 +82,7 @@ export function repairTemplateBuffer(input: Buffer): Buffer {
   xml = repairSplitPlaceholders(xml);
   xml = applyQrReferenceLayout(xml);
   xml = repairDatePlaceholders(xml);
+  xml = repairPreparedByPlaceholder(xml);
 
   const missing = REQUIRED_TAGS.filter((tag) => !xml.includes(tag));
   if (missing.length > 0) {
