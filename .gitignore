@@ -35,6 +35,7 @@ yarn-error.log*
 .env*.local
 office-tokens.generated.txt
 office-tokens.generated.pdf
+office-tokens-additional-offices.pdf
 
 # vercel
 .vercel

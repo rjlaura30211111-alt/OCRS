@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "generate-office-tokens": "node scripts/generate-office-tokens.mjs",
+    "generate-office-tokens:additional": "node scripts/generate-office-tokens.mjs --only=RLRDD,RMDU,RPIO,RCEU,RITO",
     "sync-office-tokens": "node scripts/sync-office-tokens-from-file.mjs",
     "restore-first-batch-tokens": "node scripts/restore-first-batch-tokens.mjs"
   },

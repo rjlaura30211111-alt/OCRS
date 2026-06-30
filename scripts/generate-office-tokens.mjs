@@ -28,6 +28,11 @@ const OFFICES = [
   "RPSMU",
   "RHRU",
   "RDEU",
+  "RLRDD",
+  "RMDU",
+  "RPIO",
+  "RCEU",
+  "RITO",
 ];
 
 function loadEnvFile(filePath) {
@@ -324,6 +329,17 @@ async function writeTokensPdf(rows, outputPath, generatedAt) {
 
 const localOnly = process.argv.includes("--local-only");
 
+function getArgValue(flag) {
+  const entry = process.argv.find((arg) => arg.startsWith(`${flag}=`));
+  return entry ? entry.slice(flag.length + 1).trim() : "";
+}
+
+const onlyOffices = getArgValue("--only")
+  .split(",")
+  .map((office) => office.trim())
+  .filter(Boolean);
+const pdfOut = getArgValue("--pdf-out");
+
 loadEnvFile(path.join(__dirname, "..", ".env.local"));
 
 const generatedAt = new Date();
@@ -355,7 +371,18 @@ function loadExistingTokensFromFile() {
 
 const existingTokens = loadExistingTokensFromFile();
 
-const rows = OFFICES.map((office) => ({
+const targetOffices =
+  onlyOffices.length > 0
+    ? onlyOffices.filter((office) => {
+        if (!OFFICES.includes(office)) {
+          console.error(`Unknown office: ${office}`);
+          process.exit(1);
+        }
+        return true;
+      })
+    : OFFICES;
+
+const rows = targetOffices.map((office) => ({
   office_code: office,
   access_token: existingTokens.get(office) ?? createToken(office),
   updated_at: generatedAt.toISOString(),
@@ -378,7 +405,8 @@ if (!localOnly) {
   });
 
   const { error } = await supabase.from("office_access_tokens").upsert(rows, {
-    onConflict: "office_code",
+    onConflict: "access_token",
+    ignoreDuplicates: false,
   });
 
   if (error) {
@@ -395,14 +423,30 @@ if (!localOnly) {
 
 const rootDir = path.join(__dirname, "..");
 const txtPath = path.join(rootDir, "office-tokens.generated.txt");
-const pdfPath = path.join(rootDir, "office-tokens.generated.pdf");
+const pdfPath = path.join(
+  rootDir,
+  pdfOut || (onlyOffices.length > 0 ? "office-tokens-additional-offices.pdf" : "office-tokens.generated.pdf")
+);
+
+const mergedTokens = new Map(existingTokens);
+for (const row of rows) {
+  mergedTokens.set(row.office_code, row.access_token);
+}
+
+const allOfficesInFile =
+  onlyOffices.length > 0
+    ? OFFICES.filter((office) => mergedTokens.has(office))
+    : OFFICES;
 
 const lines = [
   "OCRS Office Access Tokens",
   "Generated: " + generatedAt.toISOString(),
   "Keep this file private. Share each token only with the matching office.",
+  ...(onlyOffices.length > 0 ? ["Additional offices: " + onlyOffices.join(", ")] : []),
   "",
-  ...rows.map((row) => `${row.office_code}\t${row.access_token}`),
+  ...allOfficesInFile.map(
+    (office) => `${office}\t${mergedTokens.get(office) ?? ""}`
+  ),
   "",
 ];
 

@@ -18,6 +18,11 @@ export const OFFICE_OPTIONS = [
   "RPSMU",
   "RHRU",
   "RDEU",
+  "RLRDD",
+  "RMDU",
+  "RPIO",
+  "RCEU",
+  "RITO",
 ] as const;
 
 export type OfficeOption = (typeof OFFICE_OPTIONS)[number];
