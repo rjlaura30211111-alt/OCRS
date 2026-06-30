@@ -94,7 +94,8 @@ const supabase = createClient(url, serviceKey, {
 });
 
 const { error } = await supabase.from("office_access_tokens").upsert(rows, {
-  onConflict: "office_code",
+  onConflict: "access_token",
+  ignoreDuplicates: false,
 });
 
 if (error) {

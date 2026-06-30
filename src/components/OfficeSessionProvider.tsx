@@ -51,6 +51,12 @@ export function OfficeSessionProvider({
       throw new Error("Please enter your office access token.");
     }
 
+    if (!/^[a-z]{2,8}_[0-9a-f]{48}$/i.test(trimmed)) {
+      throw new Error(
+        "Scanned value does not look like an office token. Scan the office QR from your PDF handout, not a document reference QR."
+      );
+    }
+
     const response = await fetch("/api/auth/office-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

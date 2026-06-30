@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { QrScannerModal } from "@/components/QrScannerModal";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
+import { normalizeOfficeToken } from "@/lib/office-token-normalize";
 
 export function OfficeAccessModal() {
   const { modalOpen, closeModal, activateToken } = useOfficeSession();
@@ -150,7 +151,10 @@ export function OfficeAccessModal() {
         title="Scan Access Token QR"
         onClose={() => setScannerOpen(false)}
         onScan={(value) => {
-          void submitToken(value);
+          const normalized = normalizeOfficeToken(value);
+          setTokenInput(normalized);
+          setScannerOpen(false);
+          void submitToken(normalized);
         }}
       />
     </>

@@ -328,9 +328,36 @@ loadEnvFile(path.join(__dirname, "..", ".env.local"));
 
 const generatedAt = new Date();
 
+function loadExistingTokensFromFile() {
+  const tokenPath = path.join(__dirname, "..", "office-tokens.generated.txt");
+  if (!fs.existsSync(tokenPath)) {
+    return new Map();
+  }
+
+  const existing = new Map();
+
+  for (const line of fs.readFileSync(tokenPath, "utf8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    const tab = trimmed.indexOf("\t");
+    if (tab === -1) {
+      continue;
+    }
+
+    const office = trimmed.slice(0, tab).trim();
+    const token = trimmed.slice(tab + 1).trim();
+    if (office && token) {
+      existing.set(office, token);
+    }
+  }
+
+  return existing;
+}
+
+const existingTokens = loadExistingTokensFromFile();
+
 const rows = OFFICES.map((office) => ({
   office_code: office,
-  access_token: createToken(office),
+  access_token: existingTokens.get(office) ?? createToken(office),
   updated_at: generatedAt.toISOString(),
 }));
 

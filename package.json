@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "generate-office-tokens": "node scripts/generate-office-tokens.mjs",
-    "sync-office-tokens": "node scripts/sync-office-tokens-from-file.mjs"
+    "sync-office-tokens": "node scripts/sync-office-tokens-from-file.mjs",
+    "restore-first-batch-tokens": "node scripts/restore-first-batch-tokens.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
