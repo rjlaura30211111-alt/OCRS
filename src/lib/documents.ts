@@ -199,6 +199,69 @@ export async function searchDocumentsByReference(
   return (data ?? []).map((row) => mapRow(row as DocumentRow));
 }
 
+export type DocumentReportRecord = DocumentRecord & {
+  submitOffice: string;
+};
+
+export async function listDocumentReports(
+  limit = 100
+): Promise<DocumentReportRecord[]> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("documents")
+    .select()
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    rethrowDbError(error);
+  }
+
+  const documents = (data ?? []).map((row) => mapRow(row as DocumentRow));
+
+  if (documents.length === 0) {
+    return [];
+  }
+
+  const documentIds = documents.map((doc) => doc.id);
+
+  const { data: submitLogs, error: logError } = await supabase
+    .from("document_routing_logs")
+    .select("document_id, office_code")
+    .in("document_id", documentIds)
+    .eq("notes", "Document submitted");
+
+  if (logError) {
+    rethrowDbError(logError);
+  }
+
+  const submitOfficeByDocumentId = new Map<string, string>();
+  for (const log of submitLogs ?? []) {
+    submitOfficeByDocumentId.set(log.document_id, log.office_code);
+  }
+
+  return documents.map((document) => ({
+    ...document,
+    submitOffice:
+      submitOfficeByDocumentId.get(document.id) ??
+      document.currentOffice ??
+      "—",
+  }));
+}
+
+export function toReportPayload(document: DocumentReportRecord) {
+  return {
+    referenceNumber: document.referenceNumber,
+    subject: document.subject,
+    office: document.submitOffice,
+    drafter: document.drafter,
+    currentTrack: document.currentOffice,
+    status: document.status,
+    updatedAt: document.updatedAt,
+  };
+}
+
 export async function listDocumentsByOffice(
   office: string,
   limit = 50

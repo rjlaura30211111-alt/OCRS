@@ -1,10 +1,10 @@
 import { PageShell } from "@/components/PageShell";
-import { TrackDocumentCard } from "@/components/TrackDocumentCard";
+import { TrackReportsCard } from "@/components/TrackReportsCard";
 
 export default function TrackPage() {
   return (
-    <PageShell showBack={false}>
-      <TrackDocumentCard />
+    <PageShell wide showBack={false}>
+      <TrackReportsCard />
     </PageShell>
   );
 }
