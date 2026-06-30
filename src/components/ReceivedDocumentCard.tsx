@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { RECEIVE_DISPOSITIONS, type ReceiveDisposition } from "@/lib/dispositions";
+import {
+  isCompletedDisposition,
+  RECEIVE_DISPOSITIONS,
+  type ReceiveDisposition,
+} from "@/lib/dispositions";
 import type { OfficeOption } from "@/lib/offices";
 import {
   formatDisplayDate,
@@ -344,6 +348,13 @@ export function ReceivedDocumentCard() {
     }
   }, [selected?.referenceNumber, fetchTracking]);
 
+  function clearSelectedDocument() {
+    setSelected(null);
+    setReferenceNumber("");
+    setSubmission(null);
+    setTracking([]);
+  }
+
   function handleDocumentSaved(
     updated: DocumentLookup,
     updatedTracking: TrackingEntry[],
@@ -357,17 +368,29 @@ export function ReceivedDocumentCard() {
       updated.currentOffice &&
       updated.currentOffice !== inboxOffice &&
       previousOffice === inboxOffice;
+    const completed = isCompletedDisposition(updated.rawStatus);
 
-    if (routedAway) {
-      setSelected(null);
-      setReferenceNumber("");
-      setSubmission(null);
-      setTracking([]);
+    if (routedAway || completed) {
+      clearSelectedDocument();
       return;
     }
 
     setSelected(updated);
     setTracking(updatedTracking);
+  }
+
+  function handleTrackingUpdated(updatedTracking: TrackingEntry[]) {
+    setTracking(updatedTracking);
+
+    const receives = updatedTracking.filter(
+      (entry) => entry.notes === "Document received"
+    );
+    const latestReceive = receives[receives.length - 1];
+
+    if (latestReceive && isCompletedDisposition(latestReceive.status)) {
+      setInboxRefreshKey((key) => key + 1);
+      clearSelectedDocument();
+    }
   }
 
   function handleInboxSelect(document: DocumentLookup) {
@@ -570,9 +593,9 @@ export function ReceivedDocumentCard() {
               authOffice={session?.office ?? null}
               documentCurrentOffice={selected.currentOffice}
               officeToken={session?.token ?? ""}
-              onTrackingUpdated={setTracking}
+              onTrackingUpdated={handleTrackingUpdated}
             />
-            {session ? (
+            {session && !isCompletedDisposition(selected.rawStatus) ? (
               <ReceiveForm
                 document={selected}
                 sessionOffice={session.office}
@@ -580,6 +603,16 @@ export function ReceivedDocumentCard() {
                 onSaved={handleDocumentSaved}
                 onReceiveNext={handleReceiveNext}
               />
+            ) : session && isCompletedDisposition(selected.rawStatus) ? (
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+                <p className="text-sm font-medium text-emerald-900">
+                  Uploaded to OLCIMS
+                </p>
+                <p className="mt-1 text-xs text-emerald-800">
+                  This document is complete and no longer appears in your receive
+                  queue.
+                </p>
+              </div>
             ) : (
               <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
                 <p className="text-sm font-medium text-amber-900">

@@ -20,12 +20,18 @@ export function formatDispositionLabel(status: string): string {
     case "Return for Correction":
       return "Returned for Correction";
     case "Uploaded to OLCIMS":
+    case "Uploaded at OLCIMS":
       return "Uploaded to OLCIMS";
     default:
       return status;
   }
 }
 
+export const COMPLETED_DISPOSITIONS = [
+  "Uploaded to OLCIMS",
+  "Uploaded at OLCIMS",
+] as const;
+
 export function isCompletedDisposition(status: string): boolean {
-  return status === "Uploaded to OLCIMS";
+  return (COMPLETED_DISPOSITIONS as readonly string[]).includes(status);
 }

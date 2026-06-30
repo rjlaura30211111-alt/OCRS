@@ -60,8 +60,8 @@ export function OfficeInbox({
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Office Inbox</h2>
           <p className="mt-0.5 text-xs text-muted">
-            Active documents at {office}. Items leave once another office logs
-            receipt.
+            Active documents at {office}. Items leave when routed elsewhere or
+            marked Uploaded to OLCIMS.
           </p>
         </div>
         {results.length > 0 && (

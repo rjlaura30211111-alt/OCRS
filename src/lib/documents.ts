@@ -1,5 +1,8 @@
 import type { ActionRequested } from "@/lib/actions";
-import type { ReceiveDisposition } from "@/lib/dispositions";
+import {
+  COMPLETED_DISPOSITIONS,
+  type ReceiveDisposition,
+} from "@/lib/dispositions";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 function rethrowDbError(
@@ -273,13 +276,18 @@ export async function listDocumentsByOffice(
     return [];
   }
 
-  // Inbox = documents whose current location is this office. When another
-  // office logs receipt, current_office updates and the document drops out.
-  const { data, error } = await supabase
+  // Inbox = active documents at this office. Completed (OLCIMS) and routed-away
+  // documents are excluded from the receive queue.
+  let query = supabase
     .from("documents")
     .select()
-    .eq("current_office", trimmed)
-    .neq("status", "Uploaded to OLCIMS")
+    .eq("current_office", trimmed);
+
+  for (const completedStatus of COMPLETED_DISPOSITIONS) {
+    query = query.neq("status", completedStatus);
+  }
+
+  const { data, error } = await query
     .order("updated_at", { ascending: false })
     .limit(limit);
 
