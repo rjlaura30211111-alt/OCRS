@@ -35,7 +35,7 @@ function TrackIcon({ className = "h-5 w-5" }: { className?: string }) {
 function StatusPill({ status }: { status: string }) {
   const label = formatDispositionLabel(status);
   const tone =
-    status === "Uploaded at OLCIMS"
+    status === "Uploaded to OLCIMS"
       ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
       : status === "Approved"
         ? "bg-blue-50 text-blue-800 ring-blue-200"

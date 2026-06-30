@@ -2,7 +2,7 @@ export const RECEIVE_DISPOSITIONS = [
   "For Checking",
   "Approved",
   "Return for Correction",
-  "Uploaded at OLCIMS",
+  "Uploaded to OLCIMS",
 ] as const;
 
 export type ReceiveDisposition = (typeof RECEIVE_DISPOSITIONS)[number];
@@ -19,13 +19,13 @@ export function formatDispositionLabel(status: string): string {
       return "Checking";
     case "Return for Correction":
       return "Returned for Correction";
-    case "Uploaded at OLCIMS":
-      return "Uploaded to OLCIMC";
+    case "Uploaded to OLCIMS":
+      return "Uploaded to OLCIMS";
     default:
       return status;
   }
 }
 
 export function isCompletedDisposition(status: string): boolean {
-  return status === "Uploaded at OLCIMS";
+  return status === "Uploaded to OLCIMS";
 }

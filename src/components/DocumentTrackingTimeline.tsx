@@ -74,7 +74,7 @@ function dispositionTone(status: string): {
         badge: "bg-orange-400/20 text-orange-100 ring-orange-300/30",
         accent: "from-orange-500/20",
       };
-    case "Uploaded at OLCIMS":
+    case "Uploaded to OLCIMS":
       return {
         badge: "bg-emerald-400/25 text-emerald-50 ring-emerald-300/40",
         accent: "from-emerald-400/30",
@@ -366,6 +366,7 @@ function ReceiveTrackingCard({
   authOffice,
   officeToken,
   documentCurrentOffice,
+  readOnly = false,
   onUpdated,
   completed,
   step,
@@ -375,12 +376,14 @@ function ReceiveTrackingCard({
   authOffice: OfficeOption | null;
   officeToken: string;
   documentCurrentOffice: string | null;
+  readOnly?: boolean;
   onUpdated: (tracking: TrackingEntry[]) => void;
   completed?: boolean;
   step?: number;
 }) {
   const [editing, setEditing] = useState(false);
   const canEdit =
+    !readOnly &&
     !!authOffice &&
     !!officeToken &&
     !completed &&
@@ -438,6 +441,7 @@ function ReceiveTrackingCard({
         </TrackingCardShell>
       </div>
 
+      {canEdit && (
       <EditRoutingModal
         entry={entry}
         referenceNumber={referenceNumber}
@@ -447,6 +451,7 @@ function ReceiveTrackingCard({
         onClose={() => setEditing(false)}
         onSaved={onUpdated}
       />
+      )}
     </>
   );
 }
@@ -459,6 +464,7 @@ export function DocumentTrackingTimeline({
   authOffice,
   documentCurrentOffice,
   officeToken,
+  readOnly = false,
   onTrackingUpdated,
 }: {
   submission: SubmissionInfo | null;
@@ -468,6 +474,7 @@ export function DocumentTrackingTimeline({
   authOffice: OfficeOption | null;
   documentCurrentOffice: string | null;
   officeToken: string;
+  readOnly?: boolean;
   onTrackingUpdated?: (tracking: TrackingEntry[]) => void;
 }) {
   const receives = tracking.filter((entry) => entry.notes === "Document received");
@@ -555,6 +562,7 @@ export function DocumentTrackingTimeline({
               authOffice={authOffice}
               officeToken={officeToken}
               documentCurrentOffice={documentCurrentOffice}
+              readOnly={readOnly}
               onUpdated={(updated) => onTrackingUpdated?.(updated)}
               step={(submission ? 2 : 1) + index}
             />
@@ -580,6 +588,7 @@ export function DocumentTrackingTimeline({
                     authOffice={authOffice}
                     officeToken={officeToken}
                     documentCurrentOffice={documentCurrentOffice}
+                    readOnly={readOnly}
                     onUpdated={(updated) => onTrackingUpdated?.(updated)}
                     completed
                     step={(submission ? 2 : 1) + mainReceives.length}
@@ -596,6 +605,7 @@ export function DocumentTrackingTimeline({
                   authOffice={authOffice}
                   officeToken={officeToken}
                   documentCurrentOffice={documentCurrentOffice}
+                  readOnly={readOnly}
                   onUpdated={(updated) => onTrackingUpdated?.(updated)}
                   completed
                   step={submission ? 2 : 1}

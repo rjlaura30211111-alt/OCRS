@@ -26,7 +26,7 @@ export const DOCUMENT_STATUSES = [
   "For Checking",
   "Approved",
   "Return for Correction",
-  "Uploaded at OLCIMS",
+  "Uploaded to OLCIMS",
 ] as const;
 
 export type DocumentStatus = (typeof DOCUMENT_STATUSES)[number];
@@ -279,7 +279,7 @@ export async function listDocumentsByOffice(
     .from("documents")
     .select()
     .eq("current_office", trimmed)
-    .neq("status", "Uploaded at OLCIMS")
+    .neq("status", "Uploaded to OLCIMS")
     .order("updated_at", { ascending: false })
     .limit(limit);
 
@@ -514,7 +514,7 @@ export function toDocumentPayload(document: DocumentRecord) {
 }
 
 export function getDisplayStatus(status: DocumentStatus): string {
-  if (status === "Uploaded at OLCIMS") {
+  if (status === "Uploaded to OLCIMS") {
     return status;
   }
   return "Pending";
