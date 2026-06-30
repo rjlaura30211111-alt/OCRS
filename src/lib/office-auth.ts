@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidOfficeOption, type OfficeOption } from "@/lib/offices";
 import { canEditTrackingAtOffice } from "@/lib/office-permissions";
+import { normalizeOfficeToken } from "@/lib/office-token-normalize";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export { canEditTrackingAtOffice };
@@ -15,7 +16,7 @@ export type OfficeAuthContext = {
 export async function resolveOfficeByToken(
   token: string
 ): Promise<OfficeOption | null> {
-  const trimmed = token.trim();
+  const trimmed = normalizeOfficeToken(token);
   if (!trimmed) {
     return null;
   }
@@ -27,7 +28,12 @@ export async function resolveOfficeByToken(
     .eq("access_token", trimmed)
     .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    console.error("office token lookup error:", error.message);
+    return null;
+  }
+
+  if (!data) {
     return null;
   }
 

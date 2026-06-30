@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import type { OfficeOption } from "@/lib/offices";
+import { normalizeOfficeToken } from "@/lib/office-token-normalize";
 import {
   clearOfficeSession,
   readOfficeSession,
@@ -45,7 +46,7 @@ export function OfficeSessionProvider({
   }, []);
 
   const activateToken = useCallback(async (token: string) => {
-    const trimmed = token.trim();
+    const trimmed = normalizeOfficeToken(token);
     if (!trimmed) {
       throw new Error("Please enter your office access token.");
     }
@@ -59,7 +60,10 @@ export function OfficeSessionProvider({
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error ?? "Invalid office access token.");
+      throw new Error(
+        data.error ??
+          "Invalid office access token. Ask your admin to sync office tokens to the database."
+      );
     }
 
     const nextSession: OfficeSession = {

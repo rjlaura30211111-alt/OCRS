@@ -64,8 +64,9 @@ function formatGeneratedDate(date) {
   });
 }
 
-async function createQrBuffer(text) {
-  return QRCode.toBuffer(text.trim(), {
+async function createQrBuffer(token) {
+  const payload = `ocrs-office-token:${token.trim()}`;
+  return QRCode.toBuffer(payload, {
     type: "png",
     width: 240,
     margin: 1,

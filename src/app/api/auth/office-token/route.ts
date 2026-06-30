@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveOfficeByToken } from "@/lib/office-auth";
+import { normalizeOfficeToken } from "@/lib/office-token-normalize";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -7,7 +8,9 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const token = typeof body.token === "string" ? body.token.trim() : "";
+    const token = normalizeOfficeToken(
+      typeof body.token === "string" ? body.token : ""
+    );
 
     if (!token) {
       return NextResponse.json(
