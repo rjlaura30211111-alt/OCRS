@@ -3,55 +3,38 @@
 import { useCallback, useEffect, useState } from "react";
 import { formatDisplayDate } from "@/lib/datetime";
 import { formatDispositionLabel } from "@/lib/dispositions";
-import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
+import type { OfficeOption } from "@/lib/offices";
+import { officeAuthHeaders } from "@/lib/office-session";
 import type { DocumentLookup } from "@/components/ReceivedDocumentCard";
 
-const INBOX_OFFICE_KEY = "ocrs-inbox-office";
-
-export function getSavedInboxOffice(): OfficeOption | "" {
-  if (typeof window === "undefined") {
-    return "";
-  }
-  const saved = window.localStorage.getItem(INBOX_OFFICE_KEY);
-  return saved && (OFFICE_OPTIONS as readonly string[]).includes(saved)
-    ? (saved as OfficeOption)
-    : "";
-}
-
 type OfficeInboxProps = {
+  office: OfficeOption;
+  officeToken: string;
   selectedReference: string | null;
   onSelect: (document: DocumentLookup) => void;
   refreshKey?: number;
 };
 
 export function OfficeInbox({
+  office,
+  officeToken,
   selectedReference,
   onSelect,
   refreshKey = 0,
 }: OfficeInboxProps) {
-  const [office, setOffice] = useState<OfficeOption | "">("");
   const [results, setResults] = useState<DocumentLookup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(true);
 
-  useEffect(() => {
-    setOffice(getSavedInboxOffice());
-  }, []);
-
-  const fetchInbox = useCallback(async (officeCode: string) => {
-    if (!officeCode) {
-      setResults([]);
-      return;
-    }
-
+  const fetchInbox = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/documents/inbox?office=${encodeURIComponent(officeCode)}`
-      );
+      const response = await fetch("/api/documents/inbox", {
+        headers: officeAuthHeaders(officeToken),
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -65,21 +48,11 @@ export function OfficeInbox({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [officeToken]);
 
   useEffect(() => {
-    if (office) {
-      window.localStorage.setItem(INBOX_OFFICE_KEY, office);
-      void fetchInbox(office);
-    } else {
-      setResults([]);
-    }
-  }, [office, fetchInbox, refreshKey]);
-
-  function handleOfficeChange(value: string) {
-    setOffice(value as OfficeOption);
-    setExpanded(true);
-  }
+    void fetchInbox();
+  }, [fetchInbox, refreshKey]);
 
   return (
     <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/60 p-4">
@@ -87,11 +60,11 @@ export function OfficeInbox({
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Office Inbox</h2>
           <p className="mt-0.5 text-xs text-muted">
-            Documents routed to your office. A document leaves this list once
-            another office logs receipt.
+            Active documents at {office}. Items leave once another office logs
+            receipt.
           </p>
         </div>
-        {office && results.length > 0 && (
+        {results.length > 0 && (
           <button
             type="button"
             onClick={() => setExpanded((value) => !value)}
@@ -102,32 +75,14 @@ export function OfficeInbox({
         )}
       </div>
 
-      <div className="mt-3">
-        <label htmlFor="inbox-office" className="mb-1.5 block text-xs font-medium">
+      <div className="mt-3 rounded-lg border border-blue-200 bg-white px-4 py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">
           Your Office
-        </label>
-        <select
-          id="inbox-office"
-          value={office}
-          onChange={(e) => handleOfficeChange(e.target.value)}
-          className="w-full rounded-lg border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        >
-          <option value="">Select your office...</option>
-          {OFFICE_OPTIONS.map((code) => (
-            <option key={code} value={code}>
-              {code}
-            </option>
-          ))}
-        </select>
+        </p>
+        <p className="mt-0.5 text-base font-bold text-slate-900">{office}</p>
       </div>
 
-      {!office && (
-        <p className="mt-3 text-xs text-muted">
-          Choose your office to see documents routed there across multiple stops.
-        </p>
-      )}
-
-      {office && loading && (
+      {loading && (
         <p className="mt-3 text-xs text-muted">Loading inbox...</p>
       )}
 
@@ -137,13 +92,13 @@ export function OfficeInbox({
         </p>
       )}
 
-      {office && !loading && !error && results.length === 0 && (
+      {!loading && !error && results.length === 0 && (
         <p className="mt-3 rounded-lg bg-white px-3 py-3 text-center text-xs text-muted">
           No active documents at {office}. Scan a QR or search by reference.
         </p>
       )}
 
-      {office && expanded && !loading && results.length > 0 && (
+      {expanded && !loading && results.length > 0 && (
         <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
           {results.map((item) => {
             const isSelected =
@@ -192,21 +147,16 @@ export function OfficeInbox({
   );
 }
 
-export function syncReceiveDefaults(office: string | null, receivedBy: string) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  if (office) {
-    window.localStorage.setItem(INBOX_OFFICE_KEY, office);
-  }
-  if (receivedBy.trim()) {
-    window.localStorage.setItem("ocrs-received-by-name", receivedBy.trim());
-  }
-}
-
 export function getSavedReceivedByName(): string {
   if (typeof window === "undefined") {
     return "";
   }
   return window.localStorage.getItem("ocrs-received-by-name") ?? "";
+}
+
+export function syncReceiveDefaults(receivedBy: string) {
+  if (typeof window === "undefined" || !receivedBy.trim()) {
+    return;
+  }
+  window.localStorage.setItem("ocrs-received-by-name", receivedBy.trim());
 }

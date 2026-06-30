@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isValidOfficeOption } from "@/lib/offices";
+import {
+  isOfficeAuthContext,
+  requireOfficeAuth,
+} from "@/lib/office-auth";
 import { listDocumentsByOffice, toDocumentPayload } from "@/lib/documents";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
@@ -7,17 +10,19 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    const office = request.nextUrl.searchParams.get("office")?.trim() ?? "";
-
-    if (!office) {
-      return NextResponse.json(
-        { error: "Office is required." },
-        { status: 400 }
-      );
+    const auth = await requireOfficeAuth(request);
+    if (!isOfficeAuthContext(auth)) {
+      return auth;
     }
 
-    if (!isValidOfficeOption(office)) {
-      return NextResponse.json({ error: "Invalid office." }, { status: 400 });
+    const requestedOffice =
+      request.nextUrl.searchParams.get("office")?.trim() ?? "";
+
+    if (requestedOffice && requestedOffice !== auth.office) {
+      return NextResponse.json(
+        { error: "You can only view the inbox for your office." },
+        { status: 403 }
+      );
     }
 
     if (!isSupabaseConfigured()) {
@@ -30,10 +35,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const documents = await listDocumentsByOffice(office);
+    const documents = await listDocumentsByOffice(auth.office);
 
     return NextResponse.json({
-      office,
+      office: auth.office,
       count: documents.length,
       results: documents.map(toDocumentPayload),
     });

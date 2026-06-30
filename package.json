@@ -8,7 +8,8 @@
     "repair-template": "node scripts/repair-template.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-office-tokens": "node scripts/generate-office-tokens.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

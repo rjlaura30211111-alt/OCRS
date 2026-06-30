@@ -7,8 +7,10 @@ import {
   RECEIVE_DISPOSITIONS,
   type ReceiveDisposition,
 } from "@/lib/dispositions";
-import { OFFICE_OPTIONS } from "@/lib/offices";
 import { formatDisplayDate, formatDisplayTime } from "@/lib/datetime";
+import { canEditTrackingAtOffice } from "@/lib/office-permissions";
+import type { OfficeOption } from "@/lib/offices";
+import { officeAuthHeaders } from "@/lib/office-session";
 
 export type TrackingEntry = {
   id: string;
@@ -227,17 +229,20 @@ function DispositionBadge({ status }: { status: string }) {
 function EditRoutingModal({
   entry,
   referenceNumber,
+  authOffice,
+  officeToken,
   open,
   onClose,
   onSaved,
 }: {
   entry: TrackingEntry;
   referenceNumber: string;
+  authOffice: OfficeOption;
+  officeToken: string;
   open: boolean;
   onClose: () => void;
   onSaved: (tracking: TrackingEntry[]) => void;
 }) {
-  const [office, setOffice] = useState(entry.officeCode);
   const [receivedBy, setReceivedBy] = useState(entry.receivedBy ?? "");
   const [disposition, setDisposition] = useState<ReceiveDisposition>(
     RECEIVE_DISPOSITIONS.includes(entry.status as ReceiveDisposition)
@@ -258,11 +263,14 @@ function EditRoutingModal({
     try {
       const response = await fetch("/api/documents/routing/update", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...officeAuthHeaders(officeToken),
+        },
         body: JSON.stringify({
           id: entry.id,
           referenceNumber,
-          officeCode: office,
+          officeCode: authOffice,
           receivedBy: receivedBy.trim(),
           status: disposition,
         }),
@@ -294,17 +302,9 @@ function EditRoutingModal({
         <div className="space-y-3 p-5">
           <div>
             <label className="mb-1 block text-sm font-medium">Office</label>
-            <select
-              value={office}
-              onChange={(e) => setOffice(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
-            >
-              {OFFICE_OPTIONS.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </select>
+            <div className="rounded-lg border border-border bg-slate-50 px-3 py-2.5 text-sm font-semibold">
+              {authOffice}
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Received by</label>
@@ -363,17 +363,26 @@ function EditRoutingModal({
 function ReceiveTrackingCard({
   entry,
   referenceNumber,
+  authOffice,
+  officeToken,
+  documentCurrentOffice,
   onUpdated,
   completed,
   step,
 }: {
   entry: TrackingEntry;
   referenceNumber: string;
+  authOffice: OfficeOption;
+  officeToken: string;
+  documentCurrentOffice: string | null;
   onUpdated: (tracking: TrackingEntry[]) => void;
   completed?: boolean;
   step?: number;
 }) {
   const [editing, setEditing] = useState(false);
+  const canEdit =
+    !completed &&
+    canEditTrackingAtOffice(documentCurrentOffice, entry.officeCode, authOffice);
 
   return (
     <>
@@ -399,16 +408,20 @@ function ReceiveTrackingCard({
                 </svg>
                 Completed
               </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="rounded-md bg-amber-400/15 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-300/30 transition hover:bg-amber-400/25 hover:text-amber-200"
-              >
-                Edit
-              </button>
-            )
-          }
+          ) : canEdit ? (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-md bg-amber-400/15 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-300/30 transition hover:bg-amber-400/25 hover:text-amber-200"
+            >
+              Edit
+            </button>
+          ) : (
+            <span className="text-[10px] uppercase tracking-wide text-white/45">
+              View only
+            </span>
+          )
+        }
         >
           <CardField label="Received By" value={entry.receivedBy ?? "—"} />
           <div className="border-b border-white/10 px-4 py-2.5 last:border-0">
@@ -426,6 +439,8 @@ function ReceiveTrackingCard({
       <EditRoutingModal
         entry={entry}
         referenceNumber={referenceNumber}
+        authOffice={authOffice}
+        officeToken={officeToken}
         open={editing}
         onClose={() => setEditing(false)}
         onSaved={onUpdated}
@@ -439,12 +454,18 @@ export function DocumentTrackingTimeline({
   tracking,
   referenceNumber,
   loading,
+  authOffice,
+  documentCurrentOffice,
+  officeToken,
   onTrackingUpdated,
 }: {
   submission: SubmissionInfo | null;
   tracking: TrackingEntry[];
   referenceNumber: string;
   loading?: boolean;
+  authOffice: OfficeOption;
+  documentCurrentOffice: string | null;
+  officeToken: string;
   onTrackingUpdated?: (tracking: TrackingEntry[]) => void;
 }) {
   const receives = tracking.filter((entry) => entry.notes === "Document received");
@@ -529,6 +550,9 @@ export function DocumentTrackingTimeline({
             <ReceiveTrackingCard
               entry={entry}
               referenceNumber={referenceNumber}
+              authOffice={authOffice}
+              officeToken={officeToken}
+              documentCurrentOffice={documentCurrentOffice}
               onUpdated={(updated) => onTrackingUpdated?.(updated)}
               step={(submission ? 2 : 1) + index}
             />
@@ -551,6 +575,9 @@ export function DocumentTrackingTimeline({
                   <ReceiveTrackingCard
                     entry={completionEntry}
                     referenceNumber={referenceNumber}
+                    authOffice={authOffice}
+                    officeToken={officeToken}
+                    documentCurrentOffice={documentCurrentOffice}
                     onUpdated={(updated) => onTrackingUpdated?.(updated)}
                     completed
                     step={(submission ? 2 : 1) + mainReceives.length}
@@ -564,6 +591,9 @@ export function DocumentTrackingTimeline({
                 <ReceiveTrackingCard
                   entry={completionEntry}
                   referenceNumber={referenceNumber}
+                  authOffice={authOffice}
+                  officeToken={officeToken}
+                  documentCurrentOffice={documentCurrentOffice}
                   onUpdated={(updated) => onTrackingUpdated?.(updated)}
                   completed
                   step={submission ? 2 : 1}

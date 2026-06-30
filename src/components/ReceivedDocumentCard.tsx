@@ -4,22 +4,27 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Html5Qrcode } from "html5-qrcode";
 import { RECEIVE_DISPOSITIONS, type ReceiveDisposition } from "@/lib/dispositions";
-import { OFFICE_OPTIONS } from "@/lib/offices";
+import type { OfficeOption } from "@/lib/offices";
 import {
   formatDisplayDate,
   formatDisplayTime,
 } from "@/lib/datetime";
+import { officeAuthHeaders } from "@/lib/office-session";
 import {
   DocumentTrackingTimeline,
   type SubmissionInfo,
   type TrackingEntry,
 } from "@/components/DocumentTrackingTimeline";
+import { OfficeAccessGate } from "@/components/OfficeAccessGate";
 import {
-  getSavedInboxOffice,
   getSavedReceivedByName,
   OfficeInbox,
   syncReceiveDefaults,
 } from "@/components/OfficeInbox";
+import {
+  readOfficeSession,
+  type OfficeSession,
+} from "@/lib/office-session";
 
 export type DocumentLookup = {
   referenceNumber: string;
@@ -61,10 +66,14 @@ function useLiveDateTime() {
 
 function ReceiveForm({
   document,
+  sessionOffice,
+  officeToken,
   onSaved,
   onReceiveNext,
 }: {
   document: DocumentLookup;
+  sessionOffice: OfficeOption;
+  officeToken: string;
   onSaved: (
     updated: DocumentLookup,
     tracking: TrackingEntry[],
@@ -74,7 +83,6 @@ function ReceiveForm({
 }) {
   const liveTime = useLiveDateTime();
 
-  const [office, setOffice] = useState(document.currentOffice ?? "");
   const [receivedBy, setReceivedBy] = useState("");
   const [disposition, setDisposition] = useState<ReceiveDisposition>(
     RECEIVE_DISPOSITIONS[0]
@@ -82,25 +90,17 @@ function ReceiveForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [movedToOffice, setMovedToOffice] = useState<string | null>(null);
 
   useEffect(() => {
-    setOffice(document.currentOffice ?? getSavedInboxOffice() ?? "");
     setReceivedBy(getSavedReceivedByName());
     setDisposition(RECEIVE_DISPOSITIONS[0]);
     setSuccess(false);
-    setMovedToOffice(null);
     setError(null);
     // Reset form when a different document is loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [document.referenceNumber]);
 
   async function handleSubmit() {
-    if (!office.trim()) {
-      setError("Please select an office.");
-      return;
-    }
-
     if (!receivedBy.trim()) {
       setError("Please enter who received the document.");
       return;
@@ -109,19 +109,20 @@ function ReceiveForm({
     setSaving(true);
     setError(null);
     setSuccess(false);
-    setMovedToOffice(null);
 
     const previousOffice = document.currentOffice;
 
     try {
       const response = await fetch("/api/documents/receive", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...officeAuthHeaders(officeToken),
+        },
         body: JSON.stringify({
           referenceNumber: document.referenceNumber,
           receivedBy: receivedBy.trim(),
           status: disposition,
-          currentOffice: office.trim(),
         }),
       });
 
@@ -136,15 +137,7 @@ function ReceiveForm({
         data.tracking ?? [],
         previousOffice
       );
-      syncReceiveDefaults(office.trim(), receivedBy.trim());
-      const updated = data.document as DocumentLookup;
-      if (
-        previousOffice &&
-        updated.currentOffice &&
-        previousOffice !== updated.currentOffice
-      ) {
-        setMovedToOffice(updated.currentOffice);
-      }
+      syncReceiveDefaults(receivedBy.trim());
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save receipt.");
@@ -159,30 +152,13 @@ function ReceiveForm({
 
       <div className="mt-3 space-y-3">
         <div>
-          <label htmlFor="office" className="mb-1.5 block text-sm font-medium">
-            Office
-          </label>
-          <select
-            id="office"
-            value={office}
-            onChange={(e) => setOffice(e.target.value)}
-            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="">Select office...</option>
-            {OFFICE_OPTIONS.map((code) => (
-              <option key={code} value={code}>
-                {code}
-              </option>
-            ))}
-          </select>
-          {document.currentOffice &&
-            office &&
-            office !== document.currentOffice && (
-              <p className="mt-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Saving will route this document to <strong>{office}</strong> and
-                remove it from the {document.currentOffice} inbox.
-              </p>
-            )}
+          <label className="mb-1.5 block text-sm font-medium">Office</label>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <p className="text-base font-bold text-emerald-900">{sessionOffice}</p>
+            <p className="mt-0.5 text-xs text-emerald-800">
+              Auto-set from your office access token.
+            </p>
+          </div>
         </div>
 
         <div>
@@ -256,14 +232,7 @@ function ReceiveForm({
         {success && (
           <div className="space-y-2">
             <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-              Receipt saved at {liveTime.label}
-              {movedToOffice && (
-                <>
-                  {" "}
-                  — document moved to <strong>{movedToOffice}</strong> and removed
-                  from the previous office inbox.
-                </>
-              )}
+              Receipt saved at {liveTime.label} for {sessionOffice}.
             </p>
             {onReceiveNext && (
               <button
@@ -409,6 +378,7 @@ function QrScannerModal({
 }
 
 export function ReceivedDocumentCard() {
+  const [session, setSession] = useState<OfficeSession | null>(null);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [suggestions, setSuggestions] = useState<DocumentLookup[]>([]);
   const [selected, setSelected] = useState<DocumentLookup | null>(null);
@@ -421,6 +391,10 @@ export function ReceivedDocumentCard() {
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [inboxRefreshKey, setInboxRefreshKey] = useState(0);
+
+  useEffect(() => {
+    setSession(readOfficeSession());
+  }, []);
 
   const fetchTracking = useCallback(async (ref: string) => {
     setTrackingLoading(true);
@@ -473,7 +447,7 @@ export function ReceivedDocumentCard() {
   ) {
     setInboxRefreshKey((key) => key + 1);
 
-    const inboxOffice = getSavedInboxOffice();
+    const inboxOffice = session?.office;
     const routedAway =
       inboxOffice &&
       updated.currentOffice &&
@@ -613,7 +587,8 @@ export function ReceivedDocumentCard() {
 
   return (
     <>
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
+      <OfficeAccessGate session={session} onSessionChange={setSession}>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             Received a Document
@@ -621,7 +596,11 @@ export function ReceivedDocumentCard() {
           <p className="mt-1 text-sm text-muted">Document Tracker</p>
         </div>
 
+        {session && (
+          <>
         <OfficeInbox
+          office={session.office}
+          officeToken={session.token}
           selectedReference={selected?.referenceNumber ?? null}
           onSelect={handleInboxSelect}
           refreshKey={inboxRefreshKey}
@@ -683,10 +662,15 @@ export function ReceivedDocumentCard() {
               tracking={tracking}
               referenceNumber={selected.referenceNumber}
               loading={trackingLoading}
+              authOffice={session.office}
+              documentCurrentOffice={selected.currentOffice}
+              officeToken={session.token}
               onTrackingUpdated={setTracking}
             />
             <ReceiveForm
               document={selected}
+              sessionOffice={session.office}
+              officeToken={session.token}
               onSaved={handleDocumentSaved}
               onReceiveNext={handleReceiveNext}
             />
@@ -705,7 +689,10 @@ export function ReceivedDocumentCard() {
         >
           Back to Home
         </Link>
-      </div>
+          </>
+        )}
+        </div>
+      </OfficeAccessGate>
 
       <QrScannerModal
         open={scannerOpen}

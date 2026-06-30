@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidReceiveDisposition } from "@/lib/dispositions";
-import { isValidOfficeOption } from "@/lib/offices";
 import {
+  isOfficeAuthContext,
+  requireOfficeAuth,
+} from "@/lib/office-auth";
+import {
+  getDocumentByReference,
   getRoutingLogsByReference,
   receiveDocument,
   toDocumentPayload,
@@ -13,6 +17,11 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireOfficeAuth(request);
+    if (!isOfficeAuthContext(auth)) {
+      return auth;
+    }
+
     const body = await request.json();
     const referenceNumber =
       typeof body.referenceNumber === "string"
@@ -21,8 +30,6 @@ export async function POST(request: NextRequest) {
     const receivedBy =
       typeof body.receivedBy === "string" ? body.receivedBy.trim() : "";
     const status = typeof body.status === "string" ? body.status.trim() : "";
-    const currentOffice =
-      typeof body.currentOffice === "string" ? body.currentOffice.trim() : "";
 
     if (!referenceNumber) {
       return NextResponse.json(
@@ -45,13 +52,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isValidOfficeOption(currentOffice)) {
-      return NextResponse.json(
-        { error: "Office is required." },
-        { status: 400 }
-      );
-    }
-
     if (!isSupabaseConfigured()) {
       return NextResponse.json(
         {
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       referenceNumber,
       receivedBy,
       status,
-      currentOffice,
+      currentOffice: auth.office,
     });
 
     const tracking = await getRoutingLogsByReference(referenceNumber);

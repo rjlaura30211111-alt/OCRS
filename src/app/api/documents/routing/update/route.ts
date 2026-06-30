@@ -1,25 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidReceiveDisposition } from "@/lib/dispositions";
-import { isValidOfficeOption } from "@/lib/offices";
 import {
+  canEditTrackingAtOffice,
+  isOfficeAuthContext,
+  requireOfficeAuth,
+} from "@/lib/office-auth";
+import {
+  getDocumentByReference,
   toDocumentPayload,
   toRoutingLogPayload,
   updateRoutingLog,
 } from "@/lib/documents";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireOfficeAuth(request);
+    if (!isOfficeAuthContext(auth)) {
+      return auth;
+    }
+
     const body = await request.json();
     const id = typeof body.id === "string" ? body.id.trim() : "";
     const referenceNumber =
       typeof body.referenceNumber === "string"
         ? body.referenceNumber.trim()
         : "";
-    const officeCode =
-      typeof body.officeCode === "string" ? body.officeCode.trim() : "";
     const receivedBy =
       typeof body.receivedBy === "string" ? body.receivedBy.trim() : "";
     const status = typeof body.status === "string" ? body.status.trim() : "";
@@ -45,13 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isValidOfficeOption(officeCode)) {
-      return NextResponse.json(
-        { error: "Office is required." },
-        { status: 400 }
-      );
-    }
-
     if (!isSupabaseConfigured()) {
       return NextResponse.json(
         {
@@ -62,10 +64,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const document = await getDocumentByReference(referenceNumber);
+
+    if (!document) {
+      return NextResponse.json(
+        { error: "No Document Found" },
+        { status: 404 }
+      );
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: logRow, error: fetchError } = await supabase
+      .from("document_routing_logs")
+      .select("office_code")
+      .eq("id", id)
+      .eq("document_id", document.id)
+      .maybeSingle();
+
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    }
+
+    if (!logRow) {
+      return NextResponse.json(
+        { error: "Tracking entry not found." },
+        { status: 404 }
+      );
+    }
+
+    if (
+      !canEditTrackingAtOffice(
+        document.currentOffice,
+        logRow.office_code,
+        auth.office
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "You can only edit tracking for documents currently at your office.",
+        },
+        { status: 403 }
+      );
+    }
+
     const result = await updateRoutingLog({
       id,
       referenceNumber,
-      officeCode,
+      officeCode: auth.office,
       receivedBy,
       status,
     });

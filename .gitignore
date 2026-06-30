@@ -33,6 +33,7 @@ yarn-error.log*
 
 # env files
 .env*.local
+office-tokens.generated.txt
 
 # vercel
 .vercel
