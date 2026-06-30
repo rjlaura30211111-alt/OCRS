@@ -372,7 +372,7 @@ function ReceiveTrackingCard({
 }: {
   entry: TrackingEntry;
   referenceNumber: string;
-  authOffice: OfficeOption;
+  authOffice: OfficeOption | null;
   officeToken: string;
   documentCurrentOffice: string | null;
   onUpdated: (tracking: TrackingEntry[]) => void;
@@ -381,6 +381,8 @@ function ReceiveTrackingCard({
 }) {
   const [editing, setEditing] = useState(false);
   const canEdit =
+    !!authOffice &&
+    !!officeToken &&
     !completed &&
     canEditTrackingAtOffice(documentCurrentOffice, entry.officeCode, authOffice);
 
@@ -439,7 +441,7 @@ function ReceiveTrackingCard({
       <EditRoutingModal
         entry={entry}
         referenceNumber={referenceNumber}
-        authOffice={authOffice}
+        authOffice={authOffice!}
         officeToken={officeToken}
         open={editing}
         onClose={() => setEditing(false)}
@@ -463,7 +465,7 @@ export function DocumentTrackingTimeline({
   tracking: TrackingEntry[];
   referenceNumber: string;
   loading?: boolean;
-  authOffice: OfficeOption;
+  authOffice: OfficeOption | null;
   documentCurrentOffice: string | null;
   officeToken: string;
   onTrackingUpdated?: (tracking: TrackingEntry[]) => void;

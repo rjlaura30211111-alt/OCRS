@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Html5Qrcode } from "html5-qrcode";
 import { RECEIVE_DISPOSITIONS, type ReceiveDisposition } from "@/lib/dispositions";
 import type { OfficeOption } from "@/lib/offices";
 import {
@@ -15,16 +14,14 @@ import {
   type SubmissionInfo,
   type TrackingEntry,
 } from "@/components/DocumentTrackingTimeline";
-import { OfficeAccessGate } from "@/components/OfficeAccessGate";
+import { OfficeAccessBanner } from "@/components/OfficeAccessBanner";
+import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import {
   getSavedReceivedByName,
   OfficeInbox,
   syncReceiveDefaults,
 } from "@/components/OfficeInbox";
-import {
-  readOfficeSession,
-  type OfficeSession,
-} from "@/lib/office-session";
+import { QrScannerModal } from "@/components/QrScannerModal";
 
 export type DocumentLookup = {
   referenceNumber: string;
@@ -288,97 +285,8 @@ function ScanQrButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function QrScannerModal({
-  open,
-  onClose,
-  onScan,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onScan: (value: string) => void;
-}) {
-  const scannerId = useId().replace(/:/g, "");
-  const readerRef = useRef<Html5Qrcode | null>(null);
-  const onScanRef = useRef(onScan);
-  const onCloseRef = useRef(onClose);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    onScanRef.current = onScan;
-    onCloseRef.current = onClose;
-  }, [onScan, onClose]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    let active = true;
-    const reader = new Html5Qrcode(`qr-reader-${scannerId}`);
-    readerRef.current = reader;
-    setError(null);
-
-    reader
-      .start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
-        (decodedText) => {
-          onScanRef.current(decodedText.trim());
-          onCloseRef.current();
-        },
-        () => {}
-      )
-      .catch(() => {
-        if (active) {
-          setError("Could not access camera. Check browser permissions.");
-        }
-      });
-
-    return () => {
-      active = false;
-      const instance = readerRef.current;
-      readerRef.current = null;
-      if (instance?.isScanning) {
-        void instance.stop().then(() => instance.clear());
-      } else {
-        instance?.clear();
-      }
-    };
-  }, [open, scannerId]);
-
-  if (!open) {
-    return null;
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold">Scan QR Code</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-slate-100"
-          >
-            Close
-          </button>
-        </div>
-        <div
-          id={`qr-reader-${scannerId}`}
-          className="overflow-hidden rounded-xl bg-black"
-        />
-        {error && (
-          <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-            {error}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function ReceivedDocumentCard() {
-  const [session, setSession] = useState<OfficeSession | null>(null);
+  const { session, openModal } = useOfficeSession();
   const [referenceNumber, setReferenceNumber] = useState("");
   const [suggestions, setSuggestions] = useState<DocumentLookup[]>([]);
   const [selected, setSelected] = useState<DocumentLookup | null>(null);
@@ -391,10 +299,6 @@ export function ReceivedDocumentCard() {
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [inboxRefreshKey, setInboxRefreshKey] = useState(0);
-
-  useEffect(() => {
-    setSession(readOfficeSession());
-  }, []);
 
   const fetchTracking = useCallback(async (ref: string) => {
     setTrackingLoading(true);
@@ -587,8 +491,9 @@ export function ReceivedDocumentCard() {
 
   return (
     <>
-      <OfficeAccessGate session={session} onSessionChange={setSession}>
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
+        <OfficeAccessBanner className="mb-5" />
+
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             Received a Document
@@ -597,14 +502,14 @@ export function ReceivedDocumentCard() {
         </div>
 
         {session && (
-          <>
-        <OfficeInbox
-          office={session.office}
-          officeToken={session.token}
-          selectedReference={selected?.referenceNumber ?? null}
-          onSelect={handleInboxSelect}
-          refreshKey={inboxRefreshKey}
-        />
+          <OfficeInbox
+            office={session.office}
+            officeToken={session.token}
+            selectedReference={selected?.referenceNumber ?? null}
+            onSelect={handleInboxSelect}
+            refreshKey={inboxRefreshKey}
+          />
+        )}
 
         <label htmlFor="reference-search" className="mb-2 block text-sm font-medium">
           Enter Reference Number
@@ -662,18 +567,37 @@ export function ReceivedDocumentCard() {
               tracking={tracking}
               referenceNumber={selected.referenceNumber}
               loading={trackingLoading}
-              authOffice={session.office}
+              authOffice={session?.office ?? null}
               documentCurrentOffice={selected.currentOffice}
-              officeToken={session.token}
+              officeToken={session?.token ?? ""}
               onTrackingUpdated={setTracking}
             />
-            <ReceiveForm
-              document={selected}
-              sessionOffice={session.office}
-              officeToken={session.token}
-              onSaved={handleDocumentSaved}
-              onReceiveNext={handleReceiveNext}
-            />
+            {session ? (
+              <ReceiveForm
+                document={selected}
+                sessionOffice={session.office}
+                officeToken={session.token}
+                onSaved={handleDocumentSaved}
+                onReceiveNext={handleReceiveNext}
+              />
+            ) : (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                <p className="text-sm font-medium text-amber-900">
+                  View-only mode
+                </p>
+                <p className="mt-1 text-xs text-amber-800">
+                  Enter your office access token to receive documents and edit
+                  tracking.
+                </p>
+                <button
+                  type="button"
+                  onClick={openModal}
+                  className="mt-3 rounded-lg bg-[#1a3f6f] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#153358]"
+                >
+                  Enter Access Token
+                </button>
+              </div>
+            )}
           </>
         )}
 
@@ -689,13 +613,11 @@ export function ReceivedDocumentCard() {
         >
           Back to Home
         </Link>
-          </>
-        )}
-        </div>
-      </OfficeAccessGate>
+      </div>
 
       <QrScannerModal
         open={scannerOpen}
+        title="Scan Document QR"
         onClose={() => setScannerOpen(false)}
         onScan={handleScan}
       />
