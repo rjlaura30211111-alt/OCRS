@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { HomeStatusSummary } from "@/components/HomeStatusSummary";
 import { InstallAppPrompt } from "@/components/InstallAppPrompt";
 
 function SubmitIcon({ className = "h-7 w-7" }: { className?: string }) {
@@ -141,21 +142,13 @@ export function HomeLanding() {
         <InstallAppPrompt />
 
         <header className="mb-4 text-center sm:mb-10">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-md ring-1 ring-black/5 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl">
-            <svg
-              aria-hidden
-              className="h-5 w-5 text-blue-600 sm:h-7 sm:w-7"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.75}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9 4.423a48.11 48.11 0 0 1-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-              />
-            </svg>
+          <div className="mx-auto mb-3 flex justify-center sm:mb-5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/app-icons/PRO4A.png"
+              alt="Police Regional Office 4A"
+              className="h-20 w-auto object-contain drop-shadow-md sm:h-28"
+            />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Document Tracker
@@ -165,6 +158,8 @@ export function HomeLanding() {
             place.
           </p>
         </header>
+
+        <HomeStatusSummary />
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
           {menuItems.map((item) => {

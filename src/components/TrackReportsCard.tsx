@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   TrackingDetailModal,
   type ReportSummary,
@@ -125,14 +126,31 @@ function TrackingPhasePill({ phase }: { phase: TrackingPhase }) {
   );
 }
 
+function initialPhaseFilter(
+  statusParam: string | null
+): TrackingPhaseFilter {
+  if (
+    statusParam === "pending" ||
+    statusParam === "on-process" ||
+    statusParam === "completed"
+  ) {
+    return statusParam;
+  }
+
+  return "all";
+}
+
 export function TrackReportsCard() {
+  const searchParams = useSearchParams();
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ReportSummary | null>(null);
   const [datePreset, setDatePreset] = useState<DateRangePreset>("all");
-  const [phaseFilter, setPhaseFilter] = useState<TrackingPhaseFilter>("all");
+  const [phaseFilter, setPhaseFilter] = useState<TrackingPhaseFilter>(() =>
+    initialPhaseFilter(searchParams.get("status"))
+  );
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState(getDefaultDateValue());
 
