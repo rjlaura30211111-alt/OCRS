@@ -4,13 +4,23 @@ type PageShellProps = {
   children: React.ReactNode;
   showBack?: boolean;
   wide?: boolean;
+  align?: "center" | "top";
 };
 
-export function PageShell({ children, showBack = true, wide = false }: PageShellProps) {
+export function PageShell({
+  children,
+  showBack = true,
+  wide = false,
+  align = "center",
+}: PageShellProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6">
+    <main
+      className={`flex min-h-screen flex-col items-center p-4 sm:p-6 ${
+        align === "center" ? "justify-center" : "justify-start pt-5 sm:pt-6"
+      }`}
+    >
       {showBack && (
-        <div className={`mb-4 w-full ${wide ? "max-w-6xl" : "max-w-md"}`}>
+        <div className={`mb-3 w-full ${wide ? "max-w-6xl" : "max-w-md"}`}>
           <Link
             href="/"
             className="inline-flex items-center text-sm text-muted transition hover:text-primary"
@@ -19,7 +29,7 @@ export function PageShell({ children, showBack = true, wide = false }: PageShell
           </Link>
         </div>
       )}
-      {children}
+      <div className={`w-full ${wide ? "max-w-6xl" : "max-w-md"}`}>{children}</div>
     </main>
   );
 }

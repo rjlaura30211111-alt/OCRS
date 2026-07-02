@@ -3,7 +3,7 @@ import { TrackReportsCard } from "@/components/TrackReportsCard";
 
 export default function TrackPage() {
   return (
-    <PageShell wide showBack={false}>
+    <PageShell wide align="top">
       <TrackReportsCard />
     </PageShell>
   );

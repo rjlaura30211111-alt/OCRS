@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   TrackingDetailModal,
   type ReportSummary,
 } from "@/components/TrackingDetailModal";
 import { OfficeAccessBanner } from "@/components/OfficeAccessBanner";
 import { getDefaultDateValue } from "@/lib/datetime";
+import { formatDispositionLabel } from "@/lib/dispositions";
 import {
   DATE_RANGE_OPTIONS,
   formatTrackingPhaseLabel,
@@ -82,6 +82,28 @@ function FilterToggleGroup<T extends string>({
         })}
       </div>
     </div>
+  );
+}
+
+function DispositionPill({ disposition }: { disposition: string }) {
+  const label = formatDispositionLabel(disposition);
+  const tone =
+    disposition === "Approved-Completed" || disposition === "Uploaded to OLCIMS"
+      ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+      : disposition === "Approved"
+        ? "bg-blue-50 text-blue-800 ring-blue-200"
+        : disposition === "For Checking"
+          ? "bg-amber-50 text-amber-800 ring-amber-200"
+          : disposition === "Return for Correction"
+            ? "bg-orange-50 text-orange-800 ring-orange-200"
+            : "bg-slate-50 text-slate-600 ring-slate-200";
+
+  return (
+    <span
+      className={`inline-flex max-w-full truncate rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tone}`}
+    >
+      {label}
+    </span>
   );
 }
 
@@ -162,6 +184,7 @@ export function TrackReportsCard() {
         row.office.toLowerCase().includes(trimmed) ||
         (row.currentTrack ?? "").toLowerCase().includes(trimmed) ||
         row.status.toLowerCase().includes(trimmed) ||
+        formatDispositionLabel(row.status).toLowerCase().includes(trimmed) ||
         formatTrackingPhaseLabel(row.trackingPhase).toLowerCase().includes(trimmed)
       );
     });
@@ -173,7 +196,7 @@ export function TrackReportsCard() {
   return (
     <>
       <div className="w-full max-w-6xl rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6">
-        <OfficeAccessBanner className="mb-5" />
+        <OfficeAccessBanner className="mb-3" />
 
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -298,7 +321,7 @@ export function TrackReportsCard() {
                 : ""}
             </p>
 
-            <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
+            <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-gradient-to-r from-[#1a3f6f] to-[#2563eb]">
                   <tr>
@@ -308,6 +331,7 @@ export function TrackReportsCard() {
                       "Office",
                       "Drafter",
                       "Current Track",
+                      "Disposition",
                       "Status",
                     ].map((heading) => (
                       <th
@@ -345,6 +369,9 @@ export function TrackReportsCard() {
                         {row.currentTrack ?? "—"}
                       </td>
                       <td className="px-4 py-3">
+                        <DispositionPill disposition={row.status} />
+                      </td>
+                      <td className="px-4 py-3">
                         <TrackingPhasePill phase={row.trackingPhase} />
                       </td>
                     </tr>
@@ -365,7 +392,10 @@ export function TrackReportsCard() {
                     <p className="font-mono text-sm font-bold text-[#1a3f6f]">
                       {row.referenceNumber}
                     </p>
-                    <TrackingPhasePill phase={row.trackingPhase} />
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <TrackingPhasePill phase={row.trackingPhase} />
+                      <DispositionPill disposition={row.status} />
+                    </div>
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm font-medium text-slate-900">
                     {row.subject}
@@ -391,13 +421,6 @@ export function TrackReportsCard() {
             </div>
           </>
         )}
-
-        <Link
-          href="/"
-          className="mt-6 block w-full rounded-lg border border-border px-4 py-3 text-center text-sm font-medium transition hover:bg-slate-50"
-        >
-          Back to Home
-        </Link>
       </div>
 
       <TrackingDetailModal report={selected} onClose={() => setSelected(null)} />

@@ -16,22 +16,18 @@ export function OfficeAccessBanner({ className = "" }: OfficeAccessBannerProps) 
   if (session) {
     return (
       <div
-        className={`flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 ${className}`}
+        className={`flex items-center justify-between gap-3 border-b border-slate-200/80 pb-2 ${className}`}
       >
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-800">
-            Access Token Active
-          </p>
-          <p className="truncate text-base font-bold text-emerald-900">
-            {session.office}
-          </p>
-        </div>
+        <p className="min-w-0 truncate text-[11px] text-slate-600">
+          <span className="font-semibold text-emerald-800">{session.office}</span>
+          <span className="text-slate-500"> · access token active</span>
+        </p>
         <button
           type="button"
           onClick={signOut}
-          className="shrink-0 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100"
+          className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
         >
-          Sign Out
+          Sign out
         </button>
       </div>
     );
