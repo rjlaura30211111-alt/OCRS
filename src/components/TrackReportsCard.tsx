@@ -5,7 +5,6 @@ import {
   TrackingDetailModal,
   type ReportSummary,
 } from "@/components/TrackingDetailModal";
-import { OfficeAccessBanner } from "@/components/OfficeAccessBanner";
 import { getDefaultDateValue } from "@/lib/datetime";
 import { formatDispositionLabel } from "@/lib/dispositions";
 import {
@@ -118,6 +117,7 @@ function TrackingPhasePill({ phase }: { phase: TrackingPhase }) {
 
   return (
     <span
+      title="Status is computed automatically from document routing."
       className={`inline-flex max-w-full truncate rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tone}`}
     >
       {label}
@@ -196,8 +196,6 @@ export function TrackReportsCard() {
   return (
     <>
       <div className="w-full max-w-6xl rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6">
-        <OfficeAccessBanner className="mb-3" />
-
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2">
@@ -271,21 +269,32 @@ export function TrackReportsCard() {
           )}
 
           <FilterToggleGroup
-            label="View by Status"
+            label="View by Status (automatic)"
             options={TRACKING_PHASE_OPTIONS}
             value={phaseFilter}
             onChange={setPhaseFilter}
             activeClassName="bg-violet-600 text-white shadow-sm"
           />
 
-          <p className="text-xs leading-relaxed text-muted">
-            <span className="font-semibold text-slate-600">Pending</span> — still
-            at originating office.{" "}
-            <span className="font-semibold text-slate-600">On-Process</span> —
-            routed to another office.{" "}
-            <span className="font-semibold text-slate-600">Completed</span> —
-            uploaded to OLCIMS or Approved-Completed at OCRS.
-          </p>
+          <div className="space-y-1.5 text-xs leading-relaxed text-muted">
+            <p>
+              <span className="font-semibold text-slate-700">Disposition</span> —
+              set manually when an office receives or edits a document (Checking,
+              Approved, OLCIMS, etc.).
+            </p>
+            <p>
+              <span className="font-semibold text-slate-700">Status</span> —
+              appears automatically from routing. No need to select or edit this.
+            </p>
+            <p className="pt-0.5">
+              <span className="font-semibold text-slate-600">Pending</span> — still
+              at originating office.{" "}
+              <span className="font-semibold text-slate-600">On-Process</span> —
+              routed to another office.{" "}
+              <span className="font-semibold text-slate-600">Completed</span> —
+              uploaded to OLCIMS or Approved-Completed at OCRS.
+            </p>
+          </div>
         </div>
 
         {loading && (
@@ -325,21 +334,28 @@ export function TrackReportsCard() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-gradient-to-r from-[#1a3f6f] to-[#2563eb]">
                   <tr>
-                    {[
-                      "Reference Number",
-                      "Subject",
-                      "Office",
-                      "Drafter",
-                      "Current Track",
-                      "Disposition",
-                      "Status",
-                    ].map((heading) => (
+                    {(
+                      [
+                        ["Reference Number", null],
+                        ["Subject", null],
+                        ["Office", null],
+                        ["Drafter", null],
+                        ["Current Track", null],
+                        ["Disposition", "Set on receive"],
+                        ["Status", "Automatic"],
+                      ] as const
+                    ).map(([heading, hint]) => (
                       <th
                         key={heading}
                         scope="col"
                         className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-white"
                       >
                         {heading}
+                        {hint && (
+                          <span className="mt-0.5 block text-[9px] font-medium normal-case tracking-normal text-blue-100/90">
+                            {hint}
+                          </span>
+                        )}
                       </th>
                     ))}
                   </tr>
@@ -393,7 +409,13 @@ export function TrackReportsCard() {
                       {row.referenceNumber}
                     </p>
                     <div className="flex shrink-0 flex-col items-end gap-1">
+                      <span className="text-[10px] font-medium text-slate-500">
+                        Status · auto
+                      </span>
                       <TrackingPhasePill phase={row.trackingPhase} />
+                      <span className="text-[10px] font-medium text-slate-500">
+                        Disposition
+                      </span>
                       <DispositionPill disposition={row.status} />
                     </div>
                   </div>

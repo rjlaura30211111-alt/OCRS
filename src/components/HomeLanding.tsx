@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { InstallAppPrompt } from "@/components/InstallAppPrompt";
-import { OfficeAccessBanner } from "@/components/OfficeAccessBanner";
 
 function SubmitIcon({ className = "h-7 w-7" }: { className?: string }) {
   return (
@@ -139,7 +138,6 @@ export function HomeLanding() {
       />
 
       <div className="relative w-full max-w-4xl">
-        <OfficeAccessBanner className="mb-4 sm:mb-6" />
         <InstallAppPrompt />
 
         <header className="mb-4 text-center sm:mb-10">

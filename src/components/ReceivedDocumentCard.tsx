@@ -20,7 +20,6 @@ import {
   type SubmissionInfo,
   type TrackingEntry,
 } from "@/components/DocumentTrackingTimeline";
-import { OfficeAccessBanner } from "@/components/OfficeAccessBanner";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import {
   getSavedReceivedByName,
@@ -187,6 +186,10 @@ function ReceiveForm({
           <label htmlFor="disposition" className="mb-1.5 block text-sm font-medium">
             Disposition
           </label>
+          <p className="mb-2 text-xs text-muted">
+            Set when receiving. Status (Pending / On-Process / Completed) updates
+            automatically — no need to pick it.
+          </p>
           <select
             id="disposition"
             value={disposition}
@@ -522,8 +525,6 @@ export function ReceivedDocumentCard() {
   return (
     <>
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
-        <OfficeAccessBanner className="mb-5" />
-
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             Received a Document
