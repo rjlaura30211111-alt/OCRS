@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import {
   formatDispositionLabel,
   getCompletedDispositionMessage,
@@ -642,13 +641,6 @@ export function ReceivedDocumentCard() {
             {error}
           </p>
         )}
-
-        <Link
-          href="/"
-          className="mt-6 block w-full rounded-lg border border-border px-4 py-3 text-center text-sm font-medium transition hover:bg-slate-50"
-        >
-          Back to Home
-        </Link>
       </div>
 
       <QrScannerModal

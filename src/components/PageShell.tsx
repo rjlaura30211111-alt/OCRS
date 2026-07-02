@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackToHomePill } from "@/components/BackToHomePill";
 
 type PageShellProps = {
   children: React.ReactNode;
@@ -20,13 +20,8 @@ export function PageShell({
       }`}
     >
       {showBack && (
-        <div className={`mb-3 w-full ${wide ? "max-w-6xl" : "max-w-md"}`}>
-          <Link
-            href="/"
-            className="inline-flex items-center text-sm text-muted transition hover:text-primary"
-          >
-            ← Back to Home
-          </Link>
+        <div className={`mb-4 w-full ${wide ? "max-w-6xl" : "max-w-md"}`}>
+          <BackToHomePill />
         </div>
       )}
       <div className={`w-full ${wide ? "max-w-6xl" : "max-w-md"}`}>{children}</div>
