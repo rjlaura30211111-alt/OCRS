@@ -11,7 +11,7 @@ export function OfficeAccessHeader() {
 
   if (session) {
     return (
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md">
+      <header className="z-40 w-full shrink-0 border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <p className="min-w-0 truncate text-xs text-slate-600 sm:text-sm">
@@ -35,7 +35,7 @@ export function OfficeAccessHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-amber-200 bg-amber-50/95 backdrop-blur-md">
+    <header className="z-40 w-full shrink-0 border-b border-amber-200 bg-amber-50/95 backdrop-blur-md">
       <button
         type="button"
         onClick={openModal}

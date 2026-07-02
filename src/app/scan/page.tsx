@@ -3,7 +3,7 @@ import { ReceivedDocumentCard } from "@/components/ReceivedDocumentCard";
 
 export default function ScanPage() {
   return (
-    <PageShell>
+    <PageShell align="top">
       <ReceivedDocumentCard />
     </PageShell>
   );
