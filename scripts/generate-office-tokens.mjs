@@ -28,7 +28,7 @@ const OFFICES = [
   "RPSMU",
   "RHRU",
   "RDEU",
-  "RLRDD",
+  "ORLRDD",
   "RMDU",
   "RPIO",
   "RCEU",
@@ -57,9 +57,15 @@ function loadEnvFile(filePath) {
   }
 }
 
+// Office display name can differ from the token prefix on printed PDFs.
+const TOKEN_PREFIX_OVERRIDES = {
+  ORLRDD: "rlrdd",
+};
+
 function createToken(officeCode) {
+  const prefix = (TOKEN_PREFIX_OVERRIDES[officeCode] ?? officeCode).toLowerCase();
   const suffix = crypto.randomBytes(24).toString("hex");
-  return `${officeCode.toLowerCase()}_${suffix}`;
+  return `${prefix}_${suffix}`;
 }
 
 function formatGeneratedDate(date) {
