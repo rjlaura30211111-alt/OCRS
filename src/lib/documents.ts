@@ -3,6 +3,7 @@ import {
   COMPLETED_DISPOSITIONS,
   type ReceiveDisposition,
 } from "@/lib/dispositions";
+import { deriveTrackingPhase, type TrackingPhase } from "@/lib/report-filters";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 function rethrowDbError(
@@ -254,6 +255,12 @@ export async function listDocumentReports(
 }
 
 export function toReportPayload(document: DocumentReportRecord) {
+  const trackingPhase: TrackingPhase = deriveTrackingPhase({
+    status: document.status,
+    submitOffice: document.submitOffice,
+    currentOffice: document.currentOffice,
+  });
+
   return {
     referenceNumber: document.referenceNumber,
     subject: document.subject,
@@ -261,6 +268,8 @@ export function toReportPayload(document: DocumentReportRecord) {
     drafter: document.drafter,
     currentTrack: document.currentOffice,
     status: document.status,
+    trackingPhase,
+    createdAt: document.createdAt,
     updatedAt: document.updatedAt,
   };
 }

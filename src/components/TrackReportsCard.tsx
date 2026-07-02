@@ -2,14 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { formatDispositionLabel } from "@/lib/dispositions";
 import {
   TrackingDetailModal,
   type ReportSummary,
 } from "@/components/TrackingDetailModal";
 import { OfficeAccessBanner } from "@/components/OfficeAccessBanner";
+import { getDefaultDateValue } from "@/lib/datetime";
+import {
+  DATE_RANGE_OPTIONS,
+  formatTrackingPhaseLabel,
+  matchesDateRange,
+  matchesTrackingPhase,
+  TRACKING_PHASE_OPTIONS,
+  type DateRangePreset,
+  type TrackingPhase,
+  type TrackingPhaseFilter,
+} from "@/lib/report-filters";
 
 type ReportRow = ReportSummary & {
+  trackingPhase: TrackingPhase;
+  createdAt: string;
   updatedAt: string;
 };
 
@@ -32,18 +44,55 @@ function TrackIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-function StatusPill({ status }: { status: string }) {
-  const label = formatDispositionLabel(status);
+function FilterToggleGroup<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  activeClassName,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+  activeClassName: string;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const active = value === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                active
+                  ? activeClassName
+                  : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TrackingPhasePill({ phase }: { phase: TrackingPhase }) {
+  const label = formatTrackingPhaseLabel(phase);
   const tone =
-    status === "Uploaded to OLCIMS"
+    phase === "completed"
       ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
-      : status === "Approved"
-        ? "bg-blue-50 text-blue-800 ring-blue-200"
-        : status === "For Checking"
-          ? "bg-amber-50 text-amber-800 ring-amber-200"
-          : status === "Return for Correction"
-            ? "bg-orange-50 text-orange-800 ring-orange-200"
-            : "bg-slate-50 text-slate-700 ring-slate-200";
+      : phase === "on-process"
+        ? "bg-sky-50 text-sky-800 ring-sky-200"
+        : "bg-amber-50 text-amber-900 ring-amber-200";
 
   return (
     <span
@@ -60,6 +109,10 @@ export function TrackReportsCard() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ReportSummary | null>(null);
+  const [datePreset, setDatePreset] = useState<DateRangePreset>("all");
+  const [phaseFilter, setPhaseFilter] = useState<TrackingPhaseFilter>("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState(getDefaultDateValue());
 
   const loadReports = useCallback(async () => {
     setLoading(true);
@@ -88,20 +141,34 @@ export function TrackReportsCard() {
 
   const filtered = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
-    if (!trimmed) {
-      return reports;
-    }
 
-    return reports.filter(
-      (row) =>
+    return reports.filter((row) => {
+      if (!matchesDateRange(row.createdAt, datePreset, customFrom, customTo)) {
+        return false;
+      }
+
+      if (!matchesTrackingPhase(row.trackingPhase, phaseFilter)) {
+        return false;
+      }
+
+      if (!trimmed) {
+        return true;
+      }
+
+      return (
         row.referenceNumber.toLowerCase().includes(trimmed) ||
         row.subject.toLowerCase().includes(trimmed) ||
         row.drafter.toLowerCase().includes(trimmed) ||
         row.office.toLowerCase().includes(trimmed) ||
         (row.currentTrack ?? "").toLowerCase().includes(trimmed) ||
-        row.status.toLowerCase().includes(trimmed)
-    );
-  }, [query, reports]);
+        row.status.toLowerCase().includes(trimmed) ||
+        formatTrackingPhaseLabel(row.trackingPhase).toLowerCase().includes(trimmed)
+      );
+    });
+  }, [customFrom, customTo, datePreset, phaseFilter, query, reports]);
+
+  const hasActiveFilters =
+    datePreset !== "all" || phaseFilter !== "all" || query.trim().length > 0;
 
   return (
     <>
@@ -142,6 +209,62 @@ export function TrackReportsCard() {
           </div>
         </div>
 
+        <div className="mb-6 space-y-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+          <FilterToggleGroup
+            label="View by Date"
+            options={DATE_RANGE_OPTIONS}
+            value={datePreset}
+            onChange={setDatePreset}
+            activeClassName="bg-[#1a3f6f] text-white shadow-sm"
+          />
+
+          {datePreset === "custom" && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="custom-from" className="mb-1.5 block text-xs font-medium text-slate-700">
+                  From
+                </label>
+                <input
+                  id="custom-from"
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-to" className="mb-1.5 block text-xs font-medium text-slate-700">
+                  To
+                </label>
+                <input
+                  id="custom-to"
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+                />
+              </div>
+            </div>
+          )}
+
+          <FilterToggleGroup
+            label="View by Status"
+            options={TRACKING_PHASE_OPTIONS}
+            value={phaseFilter}
+            onChange={setPhaseFilter}
+            activeClassName="bg-violet-600 text-white shadow-sm"
+          />
+
+          <p className="text-xs leading-relaxed text-muted">
+            <span className="font-semibold text-slate-600">Pending</span> — still
+            at originating office.{" "}
+            <span className="font-semibold text-slate-600">On-Process</span> —
+            routed to another office.{" "}
+            <span className="font-semibold text-slate-600">Completed</span> —
+            uploaded to OLCIMS.
+          </p>
+        </div>
+
         {loading && (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
             <div className="mx-auto mb-3 size-8 animate-spin rounded-full border-2 border-[#1a3f6f] border-t-transparent" />
@@ -159,8 +282,8 @@ export function TrackReportsCard() {
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
             <p className="text-sm font-medium text-slate-700">No reports found</p>
             <p className="mt-1 text-sm text-muted">
-              {query.trim()
-                ? "Try a different search term."
+              {hasActiveFilters
+                ? "Try adjusting your filters or search term."
                 : "Submitted documents will appear here."}
             </p>
           </div>
@@ -170,6 +293,9 @@ export function TrackReportsCard() {
           <>
             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
               {filtered.length} report{filtered.length === 1 ? "" : "s"}
+              {reports.length !== filtered.length
+                ? ` of ${reports.length}`
+                : ""}
             </p>
 
             <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
@@ -219,7 +345,7 @@ export function TrackReportsCard() {
                         {row.currentTrack ?? "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <StatusPill status={row.status} />
+                        <TrackingPhasePill phase={row.trackingPhase} />
                       </td>
                     </tr>
                   ))}
@@ -239,7 +365,7 @@ export function TrackReportsCard() {
                     <p className="font-mono text-sm font-bold text-[#1a3f6f]">
                       {row.referenceNumber}
                     </p>
-                    <StatusPill status={row.status} />
+                    <TrackingPhasePill phase={row.trackingPhase} />
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm font-medium text-slate-900">
                     {row.subject}

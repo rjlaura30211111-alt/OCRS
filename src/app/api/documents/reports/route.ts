@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   try {
     const limitParam = request.nextUrl.searchParams.get("limit");
-    const limit = limitParam ? Math.min(Number(limitParam) || 100, 200) : 100;
+    const limit = limitParam ? Math.min(Number(limitParam) || 500, 500) : 500;
 
     if (!isSupabaseConfigured()) {
       return NextResponse.json(
