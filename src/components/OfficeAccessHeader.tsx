@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
 
 export function OfficeAccessHeader() {
@@ -15,12 +14,6 @@ export function OfficeAccessHeader() {
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <Link
-              href="/"
-              className="hidden shrink-0 text-xs font-bold tracking-wide text-[#1a3f6f] sm:inline"
-            >
-              OCRS
-            </Link>
             <p className="min-w-0 truncate text-xs text-slate-600 sm:text-sm">
               <span className="font-semibold text-emerald-800">{session.office}</span>
               <span className="hidden text-slate-500 sm:inline">
