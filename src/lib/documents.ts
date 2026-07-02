@@ -31,6 +31,7 @@ export const DOCUMENT_STATUSES = [
   "Approved",
   "Return for Correction",
   "Uploaded to OLCIMS",
+  "Approved-Completed",
 ] as const;
 
 export type DocumentStatus = (typeof DOCUMENT_STATUSES)[number];
@@ -531,6 +532,9 @@ export function toDocumentPayload(document: DocumentRecord) {
 }
 
 export function getDisplayStatus(status: DocumentStatus): string {
+  if (status === "Approved-Completed") {
+    return "Completed";
+  }
   if (status === "Uploaded to OLCIMS") {
     return status;
   }

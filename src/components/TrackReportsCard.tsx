@@ -261,7 +261,7 @@ export function TrackReportsCard() {
             <span className="font-semibold text-slate-600">On-Process</span> —
             routed to another office.{" "}
             <span className="font-semibold text-slate-600">Completed</span> —
-            uploaded to OLCIMS.
+            uploaded to OLCIMS or Approved-Completed at OCRS.
           </p>
         </div>
 

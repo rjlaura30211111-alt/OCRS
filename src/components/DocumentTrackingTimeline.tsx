@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   formatDispositionLabel,
+  getReceiveDispositionOptions,
   isCompletedDisposition,
-  RECEIVE_DISPOSITIONS,
   type ReceiveDisposition,
 } from "@/lib/dispositions";
 import { formatDisplayDate, formatDisplayTime } from "@/lib/datetime";
@@ -75,6 +75,7 @@ function dispositionTone(status: string): {
         accent: "from-orange-500/20",
       };
     case "Uploaded to OLCIMS":
+    case "Approved-Completed":
       return {
         badge: "bg-emerald-400/25 text-emerald-50 ring-emerald-300/40",
         accent: "from-emerald-400/30",
@@ -243,14 +244,27 @@ function EditRoutingModal({
   onClose: () => void;
   onSaved: (tracking: TrackingEntry[]) => void;
 }) {
+  const dispositionOptions = getReceiveDispositionOptions(authOffice);
   const [receivedBy, setReceivedBy] = useState(entry.receivedBy ?? "");
   const [disposition, setDisposition] = useState<ReceiveDisposition>(
-    RECEIVE_DISPOSITIONS.includes(entry.status as ReceiveDisposition)
-      ? (entry.status as ReceiveDisposition)
-      : RECEIVE_DISPOSITIONS[0]
+    dispositionOptions[0]
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const options = getReceiveDispositionOptions(authOffice);
+    setReceivedBy(entry.receivedBy ?? "");
+    const initial = entry.status as ReceiveDisposition;
+    setDisposition(
+      options.includes(initial) ? initial : options[0]
+    );
+    setError(null);
+  }, [open, entry.id, entry.receivedBy, entry.status, authOffice]);
 
   if (!open) {
     return null;
@@ -323,7 +337,7 @@ function EditRoutingModal({
               }
               className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
             >
-              {RECEIVE_DISPOSITIONS.map((option) => (
+              {dispositionOptions.map((option) => (
                 <option key={option} value={option}>
                   {formatDispositionLabel(option)}
                 </option>

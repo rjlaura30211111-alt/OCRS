@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  formatDispositionLabel,
+  getCompletedDispositionMessage,
+  getReceiveDispositionOptions,
   isCompletedDisposition,
-  RECEIVE_DISPOSITIONS,
   type ReceiveDisposition,
 } from "@/lib/dispositions";
 import type { OfficeOption } from "@/lib/offices";
@@ -84,9 +86,11 @@ function ReceiveForm({
 }) {
   const liveTime = useLiveDateTime();
 
+  const dispositionOptions = getReceiveDispositionOptions(sessionOffice);
+
   const [receivedBy, setReceivedBy] = useState("");
   const [disposition, setDisposition] = useState<ReceiveDisposition>(
-    RECEIVE_DISPOSITIONS[0]
+    dispositionOptions[0]
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,12 +98,15 @@ function ReceiveForm({
 
   useEffect(() => {
     setReceivedBy(getSavedReceivedByName());
-    setDisposition(RECEIVE_DISPOSITIONS[0]);
+    const options = getReceiveDispositionOptions(sessionOffice);
+    setDisposition((current) =>
+      options.includes(current) ? current : options[0]
+    );
     setSuccess(false);
     setError(null);
     // Reset form when a different document is loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [document.referenceNumber]);
+  }, [document.referenceNumber, sessionOffice]);
 
   async function handleSubmit() {
     if (!receivedBy.trim()) {
@@ -188,9 +195,9 @@ function ReceiveForm({
             }
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           >
-            {RECEIVE_DISPOSITIONS.map((option) => (
+            {dispositionOptions.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {formatDispositionLabel(option)}
               </option>
             ))}
           </select>
@@ -606,11 +613,10 @@ export function ReceivedDocumentCard() {
             ) : session && isCompletedDisposition(selected.rawStatus) ? (
               <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
                 <p className="text-sm font-medium text-emerald-900">
-                  Uploaded to OLCIMS
+                  Document Completed
                 </p>
                 <p className="mt-1 text-xs text-emerald-800">
-                  This document is complete and no longer appears in your receive
-                  queue.
+                  {getCompletedDispositionMessage(selected.rawStatus)}
                 </p>
               </div>
             ) : (

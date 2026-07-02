@@ -61,7 +61,7 @@ export function OfficeInbox({
           <h2 className="text-sm font-semibold text-slate-900">Office Inbox</h2>
           <p className="mt-0.5 text-xs text-muted">
             Active documents at {office}. Items leave when routed elsewhere or
-            marked Uploaded to OLCIMS.
+            marked completed (OLCIMS or Approved-Completed).
           </p>
         </div>
         {results.length > 0 && (
