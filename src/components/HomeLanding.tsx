@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { InstallAppPrompt } from "@/components/InstallAppPrompt";
 import { OfficeAccessBanner } from "@/components/OfficeAccessBanner";
 
 function SubmitIcon({ className = "h-7 w-7" }: { className?: string }) {
@@ -139,6 +140,7 @@ export function HomeLanding() {
 
       <div className="relative w-full max-w-4xl">
         <OfficeAccessBanner className="mb-4 sm:mb-6" />
+        <InstallAppPrompt />
 
         <header className="mb-4 text-center sm:mb-10">
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-md ring-1 ring-black/5 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl">
