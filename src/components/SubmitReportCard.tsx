@@ -9,6 +9,7 @@ import {
   getDefaultTimeValue,
 } from "@/lib/datetime";
 import { ConfirmSubmitModal } from "@/components/ConfirmSubmitModal";
+import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import { SubmitAlertModal } from "@/components/SubmitAlertModal";
 import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
 
@@ -17,6 +18,7 @@ function isDuplicateReferenceError(message: string): boolean {
 }
 
 export function SubmitReportCard() {
+  const { session, ready: sessionReady } = useOfficeSession();
   const [subject, setSubject] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [drafter, setDrafter] = useState("");
@@ -41,6 +43,19 @@ export function SubmitReportCard() {
     setTime(getDefaultTimeValue());
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!sessionReady) {
+      return;
+    }
+
+    if (session?.office) {
+      setOfficeDivision(session.office);
+      return;
+    }
+
+    setOfficeDivision("");
+  }, [session?.office, sessionReady]);
 
   function validateForm(): boolean {
     if (!subject.trim()) {
@@ -199,21 +214,32 @@ export function SubmitReportCard() {
             <label htmlFor="office" className="mb-2 block text-sm font-medium">
               Office/Division:
             </label>
-            <select
-              id="office"
-              value={officeDivision}
-              onChange={(e) =>
-                setOfficeDivision(e.target.value as OfficeOption)
-              }
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="">Select office/division...</option>
-              {OFFICE_OPTIONS.map((office) => (
-                <option key={office} value={office}>
-                  {office}
-                </option>
-              ))}
-            </select>
+            {session?.office ? (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <p className="text-base font-bold text-emerald-900">
+                  {session.office}
+                </p>
+                <p className="mt-0.5 text-xs text-emerald-800">
+                  Auto-set from your office access token.
+                </p>
+              </div>
+            ) : (
+              <select
+                id="office"
+                value={officeDivision}
+                onChange={(e) =>
+                  setOfficeDivision(e.target.value as OfficeOption)
+                }
+                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="">Select office/division...</option>
+                {OFFICE_OPTIONS.map((office) => (
+                  <option key={office} value={office}>
+                    {office}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
