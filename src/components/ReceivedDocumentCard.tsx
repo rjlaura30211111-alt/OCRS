@@ -186,10 +186,6 @@ function ReceiveForm({
           <label htmlFor="disposition" className="mb-1.5 block text-sm font-medium">
             Disposition
           </label>
-          <p className="mb-2 text-xs text-muted">
-            Set when receiving. Status (Pending / On-Process / Completed) updates
-            automatically — no need to pick it.
-          </p>
           <select
             id="disposition"
             value={disposition}

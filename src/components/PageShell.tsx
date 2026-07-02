@@ -15,8 +15,8 @@ export function PageShell({
 }: PageShellProps) {
   return (
     <main
-      className={`flex min-h-screen flex-col items-center p-4 sm:p-6 ${
-        align === "center" ? "justify-center" : "justify-start pt-5 sm:pt-6"
+      className={`flex h-full min-h-0 flex-col items-center overflow-y-auto page-scroll p-4 sm:p-6 ${
+        align === "center" ? "justify-center" : "justify-start pt-4 sm:pt-6"
       }`}
     >
       {showBack && (

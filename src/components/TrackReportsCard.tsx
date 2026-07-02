@@ -118,7 +118,6 @@ function TrackingPhasePill({ phase }: { phase: TrackingPhase }) {
 
   return (
     <span
-      title="Status is computed automatically from document routing."
       className={`inline-flex max-w-full truncate rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tone}`}
     >
       {label}
@@ -227,10 +226,6 @@ export function TrackReportsCard() {
                 <p className="text-sm text-muted">Document Tracker</p>
               </div>
             </div>
-            <p className="max-w-xl text-sm text-muted">
-              Browse submitted reports and tap a row to view its full routing
-              tree from submit to current office.
-            </p>
           </div>
 
           <div className="w-full sm:max-w-xs">
@@ -287,32 +282,12 @@ export function TrackReportsCard() {
           )}
 
           <FilterToggleGroup
-            label="View by Status (automatic)"
+            label="View by Status"
             options={TRACKING_PHASE_OPTIONS}
             value={phaseFilter}
             onChange={setPhaseFilter}
             activeClassName="bg-violet-600 text-white shadow-sm"
           />
-
-          <div className="space-y-1.5 text-xs leading-relaxed text-muted">
-            <p>
-              <span className="font-semibold text-slate-700">Disposition</span> —
-              set manually when an office receives or edits a document (Checking,
-              Approved, OLCIMS, etc.).
-            </p>
-            <p>
-              <span className="font-semibold text-slate-700">Status</span> —
-              appears automatically from routing. No need to select or edit this.
-            </p>
-            <p className="pt-0.5">
-              <span className="font-semibold text-slate-600">Pending</span> — still
-              at originating office.{" "}
-              <span className="font-semibold text-slate-600">On-Process</span> —
-              routed to another office.{" "}
-              <span className="font-semibold text-slate-600">Completed</span> —
-              uploaded to OLCIMS or Approved-Completed at OCRS.
-            </p>
-          </div>
         </div>
 
         {loading && (
@@ -354,26 +329,21 @@ export function TrackReportsCard() {
                   <tr>
                     {(
                       [
-                        ["Reference Number", null],
-                        ["Subject", null],
-                        ["Office", null],
-                        ["Drafter", null],
-                        ["Current Track", null],
-                        ["Disposition", "Set on receive"],
-                        ["Status", "Automatic"],
+                        "Reference Number",
+                        "Subject",
+                        "Office",
+                        "Drafter",
+                        "Current Track",
+                        "Disposition",
+                        "Status",
                       ] as const
-                    ).map(([heading, hint]) => (
+                    ).map((heading) => (
                       <th
                         key={heading}
                         scope="col"
                         className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-white"
                       >
                         {heading}
-                        {hint && (
-                          <span className="mt-0.5 block text-[9px] font-medium normal-case tracking-normal text-blue-100/90">
-                            {hint}
-                          </span>
-                        )}
                       </th>
                     ))}
                   </tr>
@@ -427,13 +397,7 @@ export function TrackReportsCard() {
                       {row.referenceNumber}
                     </p>
                     <div className="flex shrink-0 flex-col items-end gap-1">
-                      <span className="text-[10px] font-medium text-slate-500">
-                        Status · auto
-                      </span>
                       <TrackingPhasePill phase={row.trackingPhase} />
-                      <span className="text-[10px] font-medium text-slate-500">
-                        Disposition
-                      </span>
                       <DispositionPill disposition={row.status} />
                     </div>
                   </div>

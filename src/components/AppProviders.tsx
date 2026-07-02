@@ -7,9 +7,9 @@ import { OfficeSessionProvider } from "@/components/OfficeSessionProvider";
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <OfficeSessionProvider>
-      <div className="flex min-h-screen flex-col">
+      <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden">
         <OfficeAccessHeader />
-        <div className="flex-1">{children}</div>
+        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
       <OfficeAccessModal />
     </OfficeSessionProvider>

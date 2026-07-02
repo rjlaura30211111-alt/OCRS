@@ -124,7 +124,7 @@ const menuItems = [
 
 export function HomeLanding() {
   return (
-    <main className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden px-4 py-5 sm:px-6 sm:py-12">
+    <main className="relative flex h-full min-h-0 items-center justify-center overflow-hidden px-3 py-2 sm:px-6 sm:py-12">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_transparent_50%),radial-gradient(ellipse_at_bottom_right,_#ede9fe_0%,_transparent_45%)]"
@@ -141,16 +141,16 @@ export function HomeLanding() {
       <div className="relative w-full max-w-4xl">
         <InstallAppPrompt />
 
-        <header className="mb-4 text-center sm:mb-10">
-          <div className="mx-auto mb-3 flex justify-center sm:mb-5">
+        <header className="mb-2 text-center sm:mb-10">
+          <div className="mx-auto mb-1.5 flex justify-center sm:mb-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/app-icons/PRO4A.png"
               alt="Police Regional Office 4A"
-              className="h-20 w-auto object-contain drop-shadow-md sm:h-28"
+              className="h-14 w-auto object-contain drop-shadow-md sm:h-28"
             />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Document Tracker
           </h1>
           <p className="mx-auto mt-1.5 hidden max-w-md text-sm leading-relaxed text-muted sm:mt-3 sm:block sm:text-base">
@@ -161,14 +161,14 @@ export function HomeLanding() {
 
         <HomeStatusSummary />
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
+        <div className="grid gap-1.5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group relative flex items-center gap-3 overflow-hidden rounded-xl border border-white/60 bg-white/80 p-3.5 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg hover:ring-2 sm:flex-col sm:items-stretch sm:rounded-2xl sm:p-6 sm:hover:-translate-y-1 sm:hover:shadow-xl ${item.ring}`}
+                className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-white/60 bg-white/80 p-3 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg hover:ring-2 sm:flex-col sm:items-stretch sm:gap-3 sm:rounded-2xl sm:p-6 sm:hover:-translate-y-1 sm:hover:shadow-xl ${item.ring}`}
               >
                 <div
                   aria-hidden
