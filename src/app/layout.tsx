@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/components/AppProviders";
+import { APP_ICON_PATHS } from "@/lib/app-icons";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,6 +25,15 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: APP_ICON_PATHS.favicon32, sizes: "32x32", type: "image/png" },
+      { url: APP_ICON_PATHS.icon192, sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: APP_ICON_PATHS.icon180, sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 

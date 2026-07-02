@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { APP_ICON_PATHS } from "@/lib/app-icons";
 
 const DISMISSED_KEY = "ocrs-install-dismissed";
 
@@ -35,6 +36,7 @@ export function InstallAppPrompt() {
   const [dismissed, setDismissed] = useState(true);
   const [installed, setInstalled] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [iconMissing, setIconMissing] = useState(false);
 
   const showIosHelp = isIosDevice() && !installed && !dismissed;
 
@@ -99,8 +101,20 @@ export function InstallAppPrompt() {
   return (
     <section className="mb-4 rounded-xl border border-[#1a3f6f]/15 bg-white/90 p-4 shadow-sm backdrop-blur-sm sm:mb-6 sm:p-5">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#1a3f6f] to-[#2563eb] text-xs font-bold text-white shadow-md">
-          OCRS
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#1a3f6f] to-[#2563eb] text-xs font-bold text-white shadow-md">
+          {!iconMissing ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={APP_ICON_PATHS.icon192}
+              alt=""
+              width={44}
+              height={44}
+              className="h-full w-full object-cover"
+              onError={() => setIconMissing(true)}
+            />
+          ) : (
+            "OCRS"
+          )}
         </div>
 
         <div className="min-w-0 flex-1">
