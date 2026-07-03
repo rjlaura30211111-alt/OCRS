@@ -8,7 +8,10 @@ export const RECEIVE_DISPOSITIONS = [
 
 export type ReceiveDisposition = (typeof RECEIVE_DISPOSITIONS)[number];
 
-export const OCRS_ONLY_DISPOSITIONS = ["Approved-Completed"] as const;
+export const OCRS_ONLY_DISPOSITIONS = [
+  "Uploaded to OLCIMS",
+  "Approved-Completed",
+] as const;
 
 export const COMPLETED_DISPOSITIONS = [
   "Uploaded to OLCIMS",
@@ -16,19 +19,22 @@ export const COMPLETED_DISPOSITIONS = [
   "Approved-Completed",
 ] as const;
 
-const BASE_RECEIVE_DISPOSITIONS: ReceiveDisposition[] = [
+const STANDARD_RECEIVE_DISPOSITIONS: ReceiveDisposition[] = [
   "For Checking",
   "Approved",
   "Return for Correction",
-  "Uploaded to OLCIMS",
 ];
 
 export function getReceiveDispositionOptions(office: string): ReceiveDisposition[] {
   const trimmed = office.trim();
   if (trimmed === "OCRS") {
-    return [...BASE_RECEIVE_DISPOSITIONS, "Approved-Completed"];
+    return [
+      ...STANDARD_RECEIVE_DISPOSITIONS,
+      "Uploaded to OLCIMS",
+      "Approved-Completed",
+    ];
   }
-  return [...BASE_RECEIVE_DISPOSITIONS];
+  return [...STANDARD_RECEIVE_DISPOSITIONS];
 }
 
 export function canUseReceiveDisposition(
