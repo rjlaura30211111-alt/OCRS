@@ -16,6 +16,12 @@ function rethrowDbError(
 
   const message = error.message ?? "Database error.";
 
+  if (/documents_status_check/i.test(message)) {
+    throw new Error(
+      "This disposition could not be saved because the database status list is outdated. Run supabase/migrations/20260703143000_repair_documents_status_check.sql in the Supabase SQL Editor, then try again."
+    );
+  }
+
   if (/fetch failed|ENOTFOUND|ECONNREFUSED|network/i.test(message)) {
     throw new Error(
       "Could not connect to Supabase. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, and ensure the project is active."
