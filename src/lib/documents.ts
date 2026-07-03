@@ -18,7 +18,7 @@ function rethrowDbError(
 
   if (/documents_status_check/i.test(message)) {
     throw new Error(
-      "This disposition could not be saved because the database status list is outdated. Run supabase/migrations/20260703143000_repair_documents_status_check.sql in the Supabase SQL Editor, then try again."
+      "This disposition could not be saved because the database status list is outdated. Run supabase/migrations/20260703143000_repair_documents_status_check.sql in the Supabase SQL Editor (drop constraint first, then update, then re-add), then try again."
     );
   }
 
