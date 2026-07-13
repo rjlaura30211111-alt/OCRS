@@ -348,6 +348,23 @@ export async function getRoutingLogsByReference(
   return (data ?? []).map((row) => mapRoutingLog(row as RoutingLogRow));
 }
 
+export async function hasOfficeReceivedDocument(
+  referenceNumber: string,
+  office: string
+): Promise<boolean> {
+  const trimmedOffice = office.trim();
+  if (!trimmedOffice) {
+    return false;
+  }
+
+  const logs = await getRoutingLogsByReference(referenceNumber);
+  return logs.some(
+    (entry) =>
+      entry.officeCode.trim() === trimmedOffice &&
+      entry.notes === "Document received"
+  );
+}
+
 export function toRoutingLogPayload(entry: RoutingLogEntry) {
   return {
     id: entry.id,

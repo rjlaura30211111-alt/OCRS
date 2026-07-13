@@ -10,6 +10,7 @@ import {
 import {
   getDocumentByReference,
   getRoutingLogsByReference,
+  hasOfficeReceivedDocument,
   receiveDocument,
   toDocumentPayload,
   toRoutingLogPayload,
@@ -69,6 +70,28 @@ export async function POST(request: NextRequest) {
             "Database is not configured. Set Supabase environment variables.",
         },
         { status: 503 }
+      );
+    }
+
+    const existing = await getDocumentByReference(referenceNumber);
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "No Document Found" },
+        { status: 404 }
+      );
+    }
+
+    if (
+      existing.currentOffice?.trim() === auth.office &&
+      (await hasOfficeReceivedDocument(referenceNumber, auth.office))
+    ) {
+      return NextResponse.json(
+        {
+          error: `This document is already on-hand at ${auth.office}. Check your Office Inbox instead of scanning again.`,
+          code: "DOCUMENT_ON_HAND",
+        },
+        { status: 409 }
       );
     }
 

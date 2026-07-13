@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { isDocumentOnHandAtOffice } from "@/lib/document-on-hand";
 import {
   formatDispositionLabel,
   getCompletedDispositionMessage,
@@ -14,6 +15,7 @@ import {
   formatDisplayTime,
 } from "@/lib/datetime";
 import { officeAuthHeaders } from "@/lib/office-session";
+import { DocumentOnHandNotice } from "@/components/DocumentOnHandNotice";
 import {
   DocumentTrackingTimeline,
   type SubmissionInfo,
@@ -40,6 +42,20 @@ export type DocumentLookup = {
   sentDate?: string;
   sentTime?: string;
 };
+
+type DocumentSelectionSource = "inbox" | "scan" | "search" | null;
+
+function isScanReceiveBlocked(
+  document: DocumentLookup,
+  sessionOffice: OfficeOption | undefined,
+  source: DocumentSelectionSource
+): boolean {
+  if (!sessionOffice || source === "inbox") {
+    return false;
+  }
+
+  return isDocumentOnHandAtOffice(document.currentOffice, sessionOffice);
+}
 
 function useLiveDateTime() {
   const [now, setNow] = useState<Date | null>(null);
@@ -308,6 +324,13 @@ export function ReceivedDocumentCard() {
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [inboxRefreshKey, setInboxRefreshKey] = useState(0);
+  const [selectionSource, setSelectionSource] =
+    useState<DocumentSelectionSource>(null);
+
+  const scanReceiveBlocked =
+    selected &&
+    session &&
+    isScanReceiveBlocked(selected, session.office, selectionSource);
 
   const fetchTracking = useCallback(async (ref: string) => {
     setTrackingLoading(true);
@@ -358,6 +381,7 @@ export function ReceivedDocumentCard() {
     setReferenceNumber("");
     setSubmission(null);
     setTracking([]);
+    setSelectionSource(null);
   }
 
   function handleDocumentSaved(
@@ -401,6 +425,7 @@ export function ReceivedDocumentCard() {
   function handleInboxSelect(document: DocumentLookup) {
     setReferenceNumber(document.referenceNumber);
     setSelected(document);
+    setSelectionSource("inbox");
     setNotFound(false);
     setShowSuggestions(false);
   }
@@ -415,7 +440,7 @@ export function ReceivedDocumentCard() {
     setScannerOpen(true);
   }
 
-  const lookupDocument = useCallback(async (ref: string) => {
+  const lookupDocument = useCallback(async (ref: string, source: DocumentSelectionSource = "scan") => {
     const trimmed = ref.trim();
     if (!trimmed) {
       setSelected(null);
@@ -437,10 +462,12 @@ export function ReceivedDocumentCard() {
 
       if (response.ok && data.found) {
         setSelected(data.document);
+        setSelectionSource(source);
         setNotFound(false);
         setShowSuggestions(false);
       } else if (response.status === 404) {
         setSelected(null);
+        setSelectionSource(null);
         setNotFound(true);
       } else {
         throw new Error(data.error ?? "Lookup failed.");
@@ -489,6 +516,7 @@ export function ReceivedDocumentCard() {
 
         if (exact) {
           setSelected(exact);
+          setSelectionSource("search");
           setNotFound(false);
         } else {
           setSelected(null);
@@ -508,13 +536,14 @@ export function ReceivedDocumentCard() {
   function handleSuggestionClick(document: DocumentLookup) {
     setReferenceNumber(document.referenceNumber);
     setSelected(document);
+    setSelectionSource("search");
     setNotFound(false);
     setShowSuggestions(false);
   }
 
   function handleScan(value: string) {
     setReferenceNumber(value);
-    void lookupDocument(value);
+    void lookupDocument(value, "scan");
   }
 
   return (
@@ -598,7 +627,14 @@ export function ReceivedDocumentCard() {
               officeToken={session?.token ?? ""}
               onTrackingUpdated={handleTrackingUpdated}
             />
-            {session && !isCompletedDisposition(selected.rawStatus) ? (
+            {scanReceiveBlocked && session && (
+              <DocumentOnHandNotice
+                office={session.office}
+                referenceNumber={selected.referenceNumber}
+                subject={selected.subject}
+              />
+            )}
+            {session && !isCompletedDisposition(selected.rawStatus) && !scanReceiveBlocked ? (
               <ReceiveForm
                 document={selected}
                 sessionOffice={session.office}
