@@ -9,7 +9,7 @@ import {
   type ReportSummary,
 } from "@/components/TrackingDetailModal";
 import { getDefaultDateValue } from "@/lib/datetime";
-import { formatDispositionLabel } from "@/lib/dispositions";
+import { formatDispositionLabel, isCompletedDisposition } from "@/lib/dispositions";
 import { officeAuthHeaders } from "@/lib/office-session";
 import {
   DATE_RANGE_OPTIONS,
@@ -90,10 +90,9 @@ function FilterToggleGroup<T extends string>({
 
 function DispositionPill({ disposition }: { disposition: string }) {
   const label = formatDispositionLabel(disposition);
-  const tone =
-    disposition === "Approved-Completed" || disposition === "Uploaded to OLCIMS"
-      ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
-      : disposition === "Approved"
+  const tone = isCompletedDisposition(disposition)
+    ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+    : disposition === "Approved"
         ? "bg-blue-50 text-blue-800 ring-blue-200"
         : disposition === "For Checking"
           ? "bg-amber-50 text-amber-800 ring-amber-200"

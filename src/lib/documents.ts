@@ -1,6 +1,7 @@
 import type { ActionRequested } from "@/lib/actions";
 import {
   COMPLETED_DISPOSITIONS,
+  isCompletedDisposition,
   type ReceiveDisposition,
 } from "@/lib/dispositions";
 import { deriveTrackingPhase, type TrackingPhase } from "@/lib/report-filters";
@@ -18,7 +19,7 @@ function rethrowDbError(
 
   if (/documents_status_check/i.test(message)) {
     throw new Error(
-      "This disposition could not be saved because the database status list is outdated. Run supabase/migrations/20260703143000_repair_documents_status_check.sql in the Supabase SQL Editor (drop constraint first, then update, then re-add), then try again."
+      "This disposition could not be saved because the database status list is outdated. Run supabase/migrations/20260713190000_ocrs_completed_dispositions.sql in the Supabase SQL Editor, then try again."
     );
   }
 
@@ -50,6 +51,10 @@ export const DOCUMENT_STATUSES = [
   "Return for Correction",
   "Uploaded to OLCIMS",
   "Approved-Completed",
+  "Approved by CRS",
+  "Noted By CRS",
+  "Approved by RD",
+  "Noted by RD",
 ] as const;
 
 export type DocumentStatus = (typeof DOCUMENT_STATUSES)[number];
@@ -574,6 +579,9 @@ export function toDocumentPayload(document: DocumentRecord) {
 
 export function getDisplayStatus(status: DocumentStatus): string {
   if (status === "Approved-Completed") {
+    return "Completed";
+  }
+  if (isCompletedDisposition(status)) {
     return "Completed";
   }
   if (status === "Uploaded to OLCIMS") {

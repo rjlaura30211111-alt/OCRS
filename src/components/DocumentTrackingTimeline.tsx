@@ -59,6 +59,13 @@ function dispositionTone(status: string): {
   badge: string;
   accent: string;
 } {
+  if (isCompletedDisposition(status)) {
+    return {
+      badge: "bg-emerald-400/25 text-emerald-50 ring-emerald-300/40",
+      accent: "from-emerald-400/30",
+    };
+  }
+
   switch (status) {
     case "Approved":
       return {
@@ -74,12 +81,6 @@ function dispositionTone(status: string): {
       return {
         badge: "bg-orange-400/20 text-orange-100 ring-orange-300/30",
         accent: "from-orange-500/20",
-      };
-    case "Uploaded to OLCIMS":
-    case "Approved-Completed":
-      return {
-        badge: "bg-emerald-400/25 text-emerald-50 ring-emerald-300/40",
-        accent: "from-emerald-400/30",
       };
     default:
       return {
