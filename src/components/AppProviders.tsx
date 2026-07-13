@@ -9,7 +9,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <OfficeSessionProvider>
       <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden">
         <OfficeAccessHeader />
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+        <div className="min-h-0 flex-1">{children}</div>
       </div>
       <OfficeAccessModal />
     </OfficeSessionProvider>

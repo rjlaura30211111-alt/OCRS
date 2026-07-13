@@ -124,65 +124,66 @@ const menuItems = [
 
 export function HomeLanding() {
   return (
-    <main className="relative flex h-full min-h-0 items-center justify-center overflow-hidden px-3 py-2 sm:px-6 sm:py-12">
+    <main className="relative h-full min-h-0 overflow-y-auto page-scroll">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_transparent_50%),radial-gradient(ellipse_at_bottom_right,_#ede9fe_0%,_transparent_45%)]"
+        className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_transparent_50%),radial-gradient(ellipse_at_bottom_right,_#ede9fe_0%,_transparent_45%)]"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-24 top-20 h-64 w-64 rounded-full bg-blue-200/30 blur-3xl"
+        className="pointer-events-none fixed -left-24 top-20 h-64 w-64 rounded-full bg-blue-200/30 blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-24 bottom-20 h-64 w-64 rounded-full bg-violet-200/30 blur-3xl"
+        className="pointer-events-none fixed -right-24 bottom-20 h-64 w-64 rounded-full bg-violet-200/30 blur-3xl"
       />
 
-      <div className="relative w-full max-w-4xl">
+      <div className="relative mx-auto flex min-h-full w-full max-w-4xl flex-col px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 sm:min-h-0 sm:justify-center sm:px-6 sm:py-10">
         <InstallAppPrompt />
 
-        <header className="mb-2 text-center sm:mb-10">
-          <div className="mx-auto mb-1.5 flex justify-center sm:mb-5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/app-icons/PRO4A.png"
-              alt="Police Regional Office 4A"
-              className="h-14 w-auto object-contain drop-shadow-md sm:h-28"
-            />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Document Tracker
-          </h1>
-          <p className="mx-auto mt-1.5 hidden max-w-md text-sm leading-relaxed text-muted sm:mt-3 sm:block sm:text-base">
-            Submit routing slips with QR codes and track your documents in one
-            place.
-          </p>
-        </header>
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 sm:block sm:flex-none sm:gap-0">
+          <header className="shrink-0 text-center">
+            <div className="mx-auto mb-1 flex justify-center sm:mb-5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/app-icons/PRO4A.png"
+                alt="Police Regional Office 4A"
+                className="h-11 w-auto object-contain drop-shadow-md sm:h-28"
+              />
+            </div>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-4xl">
+              Document Tracker
+            </h1>
+            <p className="mx-auto mt-1 hidden max-w-md text-sm leading-relaxed text-muted sm:mt-3 sm:block sm:text-base">
+              Submit routing slips with QR codes and track your documents in one
+              place.
+            </p>
+          </header>
 
-        <HomeStatusSummary />
+          <HomeStatusSummary />
 
-        <div className="grid gap-1.5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-white/60 bg-white/80 p-3 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg hover:ring-2 sm:flex-col sm:items-stretch sm:gap-3 sm:rounded-2xl sm:p-6 sm:hover:-translate-y-1 sm:hover:shadow-xl ${item.ring}`}
-              >
+          <div className="grid min-h-0 flex-1 grid-rows-3 gap-1.5 sm:mt-8 sm:flex-none sm:grid-cols-2 sm:grid-rows-none sm:gap-5 lg:grid-cols-3">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`group relative flex min-h-0 flex-1 items-center gap-2 overflow-hidden rounded-xl border border-white/60 bg-white/80 p-2.5 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg hover:ring-2 sm:flex-col sm:items-stretch sm:gap-3 sm:rounded-2xl sm:p-6 sm:hover:-translate-y-1 sm:hover:shadow-xl ${item.ring}`}
+                >
                 <div
                   aria-hidden
                   className={`absolute inset-x-0 top-0 hidden h-1 bg-gradient-to-r sm:block ${item.accent} opacity-0 transition group-hover:opacity-100`}
                 />
 
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition duration-300 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl ${item.iconBg}`}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition duration-300 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl ${item.iconBg}`}
                 >
-                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
+                  <Icon className="h-4 w-4 sm:h-7 sm:w-7" />
                 </div>
 
                 <div className="min-w-0 flex-1 sm:flex sm:flex-col">
-                  <h2 className="text-sm font-semibold text-slate-900 sm:text-lg">
+                  <h2 className="text-[13px] font-semibold leading-tight text-slate-900 sm:text-lg">
                     {item.title}
                   </h2>
                   <p className="mt-0.5 hidden text-sm leading-relaxed text-muted sm:mt-2 sm:block">
@@ -212,6 +213,7 @@ export function HomeLanding() {
               </Link>
             );
           })}
+          </div>
         </div>
       </div>
     </main>

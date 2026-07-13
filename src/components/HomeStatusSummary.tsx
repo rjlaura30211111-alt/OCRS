@@ -72,7 +72,7 @@ function SummaryCard({
   return (
     <Link
       href={href}
-      className={`group relative overflow-hidden rounded-xl border border-white/70 bg-white/85 p-3 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 sm:rounded-2xl sm:p-5 ${ring}`}
+      className={`group relative overflow-hidden rounded-xl border border-white/70 bg-white/85 p-2.5 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 sm:rounded-2xl sm:p-5 ${ring}`}
     >
       <div
         aria-hidden
@@ -94,7 +94,7 @@ function SummaryCard({
               className="mt-1 h-8 w-12 animate-pulse rounded-lg bg-slate-100 sm:mt-2 sm:h-10 sm:w-16"
             />
           ) : (
-            <p className="mt-0.5 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-1 sm:text-4xl">
+            <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-1 sm:text-4xl">
               {count}
             </p>
           )}
@@ -158,7 +158,7 @@ export function HomeStatusSummary() {
   return (
     <section
       aria-label="Document status summary"
-      className="mb-2 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-4"
+      className="shrink-0 grid grid-cols-2 gap-1.5 sm:mb-8 sm:gap-4"
     >
       <SummaryCard
         href="/track?status=pending"

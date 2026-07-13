@@ -39,16 +39,17 @@ export function OfficeAccessHeader() {
       <button
         type="button"
         onClick={openModal}
-        className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-2.5 text-left transition hover:bg-amber-100/60 sm:px-6"
+        className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2 text-left transition hover:bg-amber-100/60 sm:gap-3 sm:px-6 sm:py-2.5"
       >
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-800">
-            No Access Token
-          </p>
-          <p className="truncate text-xs font-medium text-amber-950 sm:text-sm">
-            View-only mode — tap to enter access token
-          </p>
-        </div>
+        <p className="min-w-0 truncate text-[11px] font-semibold text-amber-950 sm:text-sm">
+          <span className="font-bold uppercase tracking-wide text-amber-800">
+            No token
+          </span>
+          <span className="font-medium text-amber-900/90">
+            {" "}
+            · Tap to enter access token
+          </span>
+        </p>
         <svg
           aria-hidden
           className="size-4 shrink-0 text-amber-700"
