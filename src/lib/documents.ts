@@ -91,6 +91,7 @@ export type ReceiveDocumentInput = {
   receivedBy: string;
   status: ReceiveDisposition;
   currentOffice: string;
+  destinationOffice?: string | null;
 };
 
 export type UpdateDocumentInput = {
@@ -491,15 +492,20 @@ export async function receiveDocument(
     throw new Error("Office is required.");
   }
   const receivedAt = new Date().toISOString();
+  const updatePayload: Record<string, string> = {
+    received_by: input.receivedBy.trim(),
+    status: input.status,
+    current_office: office,
+    updated_at: receivedAt,
+  };
+
+  if (input.destinationOffice?.trim()) {
+    updatePayload.destination_office = input.destinationOffice.trim();
+  }
 
   const { data, error } = await supabase
     .from("documents")
-    .update({
-      received_by: input.receivedBy.trim(),
-      status: input.status,
-      current_office: office,
-      updated_at: receivedAt,
-    })
+    .update(updatePayload)
     .eq("id", existing.id)
     .select()
     .single();
