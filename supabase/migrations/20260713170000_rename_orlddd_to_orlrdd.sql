@@ -1,8 +1,15 @@
 -- Rename mistyped office ORLDDD to ORLRDD across active and archived data
 
-UPDATE office_access_tokens
-SET office_code = 'ORLRDD'
-WHERE office_code = 'ORLDDD';
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM office_access_tokens WHERE office_code = 'ORLDDD') THEN
+    IF EXISTS (SELECT 1 FROM office_access_tokens WHERE office_code = 'ORLRDD') THEN
+      DELETE FROM office_access_tokens WHERE office_code = 'ORLDDD';
+    ELSE
+      UPDATE office_access_tokens SET office_code = 'ORLRDD' WHERE office_code = 'ORLDDD';
+    END IF;
+  END IF;
+END $$;
 
 UPDATE documents
 SET current_office = 'ORLRDD'

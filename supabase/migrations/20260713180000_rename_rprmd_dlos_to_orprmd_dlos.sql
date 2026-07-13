@@ -1,8 +1,15 @@
 -- Remove duplicate office code RPRMD-DLOS; standardize as ORPRMD-DLOS
 
-UPDATE office_access_tokens
-SET office_code = 'ORPRMD-DLOS'
-WHERE office_code = 'RPRMD-DLOS';
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM office_access_tokens WHERE office_code = 'RPRMD-DLOS') THEN
+    IF EXISTS (SELECT 1 FROM office_access_tokens WHERE office_code = 'ORPRMD-DLOS') THEN
+      DELETE FROM office_access_tokens WHERE office_code = 'RPRMD-DLOS';
+    ELSE
+      UPDATE office_access_tokens SET office_code = 'ORPRMD-DLOS' WHERE office_code = 'RPRMD-DLOS';
+    END IF;
+  END IF;
+END $$;
 
 UPDATE documents
 SET current_office = 'ORPRMD-DLOS'
