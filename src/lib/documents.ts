@@ -563,3 +563,108 @@ export function getDisplayStatus(status: DocumentStatus): string {
   }
   return "Pending";
 }
+
+export async function archiveDocumentByReference(
+  referenceNumber: string,
+  archivedByOffice: string
+): Promise<void> {
+  const document = await getDocumentByReference(referenceNumber);
+
+  if (!document) {
+    throw new Error("No Document Found");
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const { data: logs, error: logsError } = await supabase
+    .from("document_routing_logs")
+    .select()
+    .eq("document_id", document.id)
+    .order("logged_at", { ascending: true });
+
+  if (logsError) {
+    rethrowDbError(logsError);
+  }
+
+  const { data: archived, error: archError } = await supabase
+    .from("archived_documents")
+    .insert({
+      original_document_id: document.id,
+      reference_number: document.referenceNumber,
+      subject: document.subject,
+      drafter: document.drafter,
+      action_requested: document.actionRequested,
+      sent_date: document.sentDate,
+      sent_time: document.sentTime,
+      status: document.status,
+      received_by: document.receivedBy,
+      current_office: document.currentOffice,
+      document_created_at: document.createdAt,
+      document_updated_at: document.updatedAt,
+      archived_by_office: archivedByOffice.trim(),
+    })
+    .select("id")
+    .single();
+
+  if (archError) {
+    rethrowDbError(archError);
+  }
+
+  if (logs && logs.length > 0) {
+    const { error: archLogsError } = await supabase
+      .from("archived_document_routing_logs")
+      .insert(
+        logs.map((log) => ({
+          archived_document_id: archived.id,
+          original_log_id: log.id,
+          office_code: log.office_code,
+          received_by: log.received_by,
+          status: log.status,
+          logged_at: log.logged_at,
+          notes: log.notes,
+        }))
+      );
+
+    if (archLogsError) {
+      rethrowDbError(archLogsError);
+    }
+  }
+
+  const { error: deleteLogsError } = await supabase
+    .from("document_routing_logs")
+    .delete()
+    .eq("document_id", document.id);
+
+  if (deleteLogsError) {
+    rethrowDbError(deleteLogsError);
+  }
+
+  const { error: deleteDocError } = await supabase
+    .from("documents")
+    .delete()
+    .eq("id", document.id);
+
+  if (deleteDocError) {
+    rethrowDbError(deleteDocError);
+  }
+}
+
+export async function getDocumentSubmitOffice(
+  documentId: string,
+  fallbackOffice: string | null
+): Promise<string> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("document_routing_logs")
+    .select("office_code")
+    .eq("document_id", documentId)
+    .eq("notes", "Document submitted")
+    .maybeSingle();
+
+  if (error) {
+    rethrowDbError(error);
+  }
+
+  return data?.office_code ?? fallbackOffice ?? "—";
+}

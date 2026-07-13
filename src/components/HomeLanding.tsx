@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { HomeStatusSummary } from "@/components/HomeStatusSummary";
 import { InstallAppPrompt } from "@/components/InstallAppPrompt";
+import { useOfficeSession } from "@/components/OfficeSessionProvider";
 
 function SubmitIcon({ className = "h-7 w-7" }: { className?: string }) {
   return (
@@ -97,6 +98,7 @@ const menuItems = [
     iconBg:
       "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white",
     ring: "group-hover:ring-blue-200",
+    requiresToken: false,
   },
   {
     href: "/scan",
@@ -108,6 +110,7 @@ const menuItems = [
     iconBg:
       "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white",
     ring: "group-hover:ring-emerald-200",
+    requiresToken: true,
   },
   {
     href: "/track",
@@ -119,10 +122,99 @@ const menuItems = [
     iconBg:
       "bg-violet-50 text-violet-600 group-hover:bg-violet-600 group-hover:text-white",
     ring: "group-hover:ring-violet-200",
+    requiresToken: true,
   },
 ] as const;
 
+function MenuCard({
+  item,
+  disabled,
+  onDisabledClick,
+}: {
+  item: (typeof menuItems)[number];
+  disabled: boolean;
+  onDisabledClick: () => void;
+}) {
+  const Icon = item.icon;
+  const className = `group relative flex min-h-0 flex-1 items-center gap-2 overflow-hidden rounded-xl border border-white/60 bg-white/80 p-2.5 shadow-sm backdrop-blur-sm transition duration-300 sm:flex-col sm:items-stretch sm:gap-3 sm:rounded-2xl sm:p-6 ${
+    disabled
+      ? "cursor-not-allowed opacity-45 grayscale"
+      : `hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg hover:ring-2 sm:hover:-translate-y-1 sm:hover:shadow-xl ${item.ring}`
+  }`;
+
+  const content = (
+    <>
+      <div
+        aria-hidden
+        className={`absolute inset-x-0 top-0 hidden h-1 bg-gradient-to-r sm:block ${item.accent} ${
+          disabled ? "opacity-0" : "opacity-0 transition group-hover:opacity-100"
+        }`}
+      />
+
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition duration-300 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl ${item.iconBg}`}
+      >
+        <Icon className="h-4 w-4 sm:h-7 sm:w-7" />
+      </div>
+
+      <div className="min-w-0 flex-1 sm:flex sm:flex-col">
+        <h2 className="text-[13px] font-semibold leading-tight text-slate-900 sm:text-lg">
+          {item.title}
+        </h2>
+        <p className="mt-0.5 hidden text-sm leading-relaxed text-muted sm:mt-2 sm:block">
+          {item.description}
+        </p>
+        {disabled && (
+          <p className="mt-1 text-[10px] font-medium text-slate-500 sm:text-xs">
+            Office token required
+          </p>
+        )}
+      </div>
+
+      <ChevronIcon />
+
+      <span className="mt-5 hidden items-center gap-1.5 text-sm font-semibold text-slate-700 transition group-hover:gap-2.5 group-hover:text-primary sm:inline-flex">
+        {item.action}
+        <svg
+          aria-hidden
+          className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+          />
+        </svg>
+      </span>
+    </>
+  );
+
+  if (disabled) {
+    return (
+      <button
+        type="button"
+        aria-disabled
+        onClick={onDisabledClick}
+        className={className}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={item.href} className={className}>
+      {content}
+    </Link>
+  );
+}
+
 export function HomeLanding() {
+  const { session, openModal } = useOfficeSession();
   return (
     <main className="relative h-full min-h-0 overflow-y-auto page-scroll">
       <div
@@ -163,56 +255,14 @@ export function HomeLanding() {
           <HomeStatusSummary />
 
           <div className="grid min-h-0 flex-1 grid-rows-3 gap-1.5 sm:mt-8 sm:flex-none sm:grid-cols-2 sm:grid-rows-none sm:gap-5 lg:grid-cols-3">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`group relative flex min-h-0 flex-1 items-center gap-2 overflow-hidden rounded-xl border border-white/60 bg-white/80 p-2.5 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg hover:ring-2 sm:flex-col sm:items-stretch sm:gap-3 sm:rounded-2xl sm:p-6 sm:hover:-translate-y-1 sm:hover:shadow-xl ${item.ring}`}
-                >
-                <div
-                  aria-hidden
-                  className={`absolute inset-x-0 top-0 hidden h-1 bg-gradient-to-r sm:block ${item.accent} opacity-0 transition group-hover:opacity-100`}
-                />
-
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition duration-300 sm:mb-5 sm:h-14 sm:w-14 sm:rounded-2xl ${item.iconBg}`}
-                >
-                  <Icon className="h-4 w-4 sm:h-7 sm:w-7" />
-                </div>
-
-                <div className="min-w-0 flex-1 sm:flex sm:flex-col">
-                  <h2 className="text-[13px] font-semibold leading-tight text-slate-900 sm:text-lg">
-                    {item.title}
-                  </h2>
-                  <p className="mt-0.5 hidden text-sm leading-relaxed text-muted sm:mt-2 sm:block">
-                    {item.description}
-                  </p>
-                </div>
-
-                <ChevronIcon />
-
-                <span className="mt-5 hidden items-center gap-1.5 text-sm font-semibold text-slate-700 transition group-hover:gap-2.5 group-hover:text-primary sm:inline-flex">
-                  {item.action}
-                  <svg
-                    aria-hidden
-                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                    />
-                  </svg>
-                </span>
-              </Link>
-            );
-          })}
+            {menuItems.map((item) => (
+              <MenuCard
+                key={item.href}
+                item={item}
+                disabled={item.requiresToken && !session}
+                onDisabledClick={openModal}
+              />
+            ))}
           </div>
         </div>
       </div>

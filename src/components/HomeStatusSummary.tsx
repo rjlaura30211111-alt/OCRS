@@ -53,6 +53,8 @@ function SummaryCard({
   label,
   count,
   loading,
+  disabled,
+  onDisabledClick,
   icon: Icon,
   accent,
   iconBg,
@@ -63,17 +65,22 @@ function SummaryCard({
   label: string;
   count: number;
   loading: boolean;
+  disabled?: boolean;
+  onDisabledClick?: () => void;
   icon: typeof ClockIcon;
   accent: string;
   iconBg: string;
   ring: string;
   glow: string;
 }) {
-  return (
-    <Link
-      href={href}
-      className={`group relative overflow-hidden rounded-xl border border-white/70 bg-white/85 p-2.5 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 sm:rounded-2xl sm:p-5 ${ring}`}
-    >
+  const className = `group relative overflow-hidden rounded-xl border border-white/70 bg-white/85 p-2.5 shadow-sm backdrop-blur-sm transition duration-300 sm:rounded-2xl sm:p-5 ${
+    disabled
+      ? "cursor-not-allowed opacity-45 grayscale"
+      : `hover:-translate-y-0.5 hover:shadow-lg hover:ring-2 ${ring}`
+  }`;
+
+  const content = (
+    <>
       <div
         aria-hidden
         className={`pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full blur-2xl transition group-hover:scale-110 ${glow}`}
@@ -106,21 +113,42 @@ function SummaryCard({
           <Icon className="h-4 w-4 sm:h-6 sm:w-6" />
         </div>
       </div>
+    </>
+  );
+
+  if (disabled) {
+    return (
+      <button type="button" aria-disabled onClick={onDisabledClick} className={className}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {content}
     </Link>
   );
 }
 
 export function HomeStatusSummary() {
-  const { session } = useOfficeSession();
+  const { session, openModal } = useOfficeSession();
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const disabled = !session;
 
   const loadSummary = useCallback(async () => {
+    if (!session) {
+      setReports([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch("/api/documents/reports", {
-        headers: session ? officeAuthHeaders(session.token) : undefined,
+        headers: officeAuthHeaders(session.token),
       });
       const data = await response.json();
 
@@ -163,8 +191,10 @@ export function HomeStatusSummary() {
       <SummaryCard
         href="/track?status=pending"
         label="Total Pending"
-        count={counts.pending}
-        loading={loading}
+        count={disabled ? 0 : counts.pending}
+        loading={!disabled && loading}
+        disabled={disabled}
+        onDisabledClick={openModal}
         icon={ClockIcon}
         accent="from-amber-400 to-amber-500"
         iconBg="bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white"
@@ -174,8 +204,10 @@ export function HomeStatusSummary() {
       <SummaryCard
         href="/track?status=on-process"
         label="Total On-Process"
-        count={counts.onProcess}
-        loading={loading}
+        count={disabled ? 0 : counts.onProcess}
+        loading={!disabled && loading}
+        disabled={disabled}
+        onDisabledClick={openModal}
         icon={RouteIcon}
         accent="from-sky-400 to-sky-500"
         iconBg="bg-sky-50 text-sky-600 group-hover:bg-sky-500 group-hover:text-white"
