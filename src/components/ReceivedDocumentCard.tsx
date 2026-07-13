@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { isDocumentOnHandAtOffice } from "@/lib/document-on-hand";
 import {
+  documentRequiresDestination,
   getWrongDestinationMessage,
   isWrongReceivingOffice,
 } from "@/lib/document-destination";
@@ -118,6 +119,9 @@ function ReceiveForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const requiresDestination = documentRequiresDestination(
+    document.destinationOffice
+  );
 
   useEffect(() => {
     setReceivedBy(getSavedReceivedByName());
@@ -143,22 +147,24 @@ function ReceiveForm({
       return;
     }
 
-    if (!destinationOffice) {
-      setError("Please select the office destination.");
-      return;
-    }
+    if (requiresDestination) {
+      if (!destinationOffice) {
+        setError("Please select the office destination.");
+        return;
+      }
 
-    if (sessionOffice !== destinationOffice) {
-      setError(getWrongDestinationMessage(destinationOffice));
-      return;
-    }
+      if (sessionOffice !== destinationOffice) {
+        setError(getWrongDestinationMessage(destinationOffice));
+        return;
+      }
 
-    if (
-      document.destinationOffice &&
-      document.destinationOffice !== destinationOffice
-    ) {
-      setError(getWrongDestinationMessage(document.destinationOffice));
-      return;
+      if (
+        document.destinationOffice &&
+        document.destinationOffice !== destinationOffice
+      ) {
+        setError(getWrongDestinationMessage(document.destinationOffice));
+        return;
+      }
     }
 
     setSaving(true);
@@ -178,7 +184,7 @@ function ReceiveForm({
           referenceNumber: document.referenceNumber,
           receivedBy: receivedBy.trim(),
           status: disposition,
-          destinationOffice,
+          ...(requiresDestination ? { destinationOffice } : {}),
         }),
       });
 
@@ -217,33 +223,40 @@ function ReceiveForm({
           </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="destination-office"
-            className="mb-1.5 block text-sm font-medium"
-          >
-            Office Destination
-          </label>
-          <select
-            id="destination-office"
-            value={destinationOffice}
-            onChange={(e) =>
-              setDestinationOffice(e.target.value as OfficeOption)
-            }
-            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="">Select office destination...</option>
-            {OFFICE_OPTIONS.map((office) => (
-              <option key={office} value={office}>
-                {office}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1.5 text-xs text-muted">
-            Select the office this document is addressed to. Your office must
-            match the destination to receive it.
+        {requiresDestination ? (
+          <div>
+            <label
+              htmlFor="destination-office"
+              className="mb-1.5 block text-sm font-medium"
+            >
+              Office Destination
+            </label>
+            <select
+              id="destination-office"
+              value={destinationOffice}
+              onChange={(e) =>
+                setDestinationOffice(e.target.value as OfficeOption)
+              }
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="">Select office destination...</option>
+              {OFFICE_OPTIONS.map((office) => (
+                <option key={office} value={office}>
+                  {office}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-muted">
+              Select the office this document is addressed to. Your office must
+              match the destination to receive it.
+            </p>
+          </div>
+        ) : (
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+            This report has no office destination on file (older routing slip).
+            You may receive it at your office.
           </p>
-        </div>
+        )}
 
         <div>
           <label htmlFor="received-by" className="mb-1.5 block text-sm font-medium">

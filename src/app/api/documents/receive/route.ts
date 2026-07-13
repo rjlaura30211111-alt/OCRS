@@ -3,7 +3,10 @@ import {
   canUseReceiveDisposition,
   isValidReceiveDisposition,
 } from "@/lib/dispositions";
-import { getWrongDestinationMessage } from "@/lib/document-destination";
+import {
+  documentRequiresDestination,
+  getWrongDestinationMessage,
+} from "@/lib/document-destination";
 import {
   isOfficeAuthContext,
   requireOfficeAuth,
@@ -55,23 +58,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!destinationOffice || !isValidOfficeOption(destinationOffice)) {
-      return NextResponse.json(
-        { error: "Office Destination is required." },
-        { status: 400 }
-      );
-    }
-
-    if (auth.office !== destinationOffice) {
-      return NextResponse.json(
-        {
-          error: getWrongDestinationMessage(destinationOffice),
-          code: "WRONG_DESTINATION_OFFICE",
-        },
-        { status: 403 }
-      );
-    }
-
     if (!isValidReceiveDisposition(status)) {
       return NextResponse.json(
         { error: "Invalid disposition." },
@@ -105,17 +91,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (
-      existing.destinationOffice &&
-      existing.destinationOffice !== destinationOffice
-    ) {
-      return NextResponse.json(
-        {
-          error: getWrongDestinationMessage(existing.destinationOffice),
-          code: "WRONG_DESTINATION_OFFICE",
-        },
-        { status: 403 }
-      );
+    if (documentRequiresDestination(existing.destinationOffice)) {
+      if (!destinationOffice || !isValidOfficeOption(destinationOffice)) {
+        return NextResponse.json(
+          { error: "Office Destination is required." },
+          { status: 400 }
+        );
+      }
+
+      if (auth.office !== destinationOffice) {
+        return NextResponse.json(
+          {
+            error: getWrongDestinationMessage(destinationOffice),
+            code: "WRONG_DESTINATION_OFFICE",
+          },
+          { status: 403 }
+        );
+      }
+
+      if (existing.destinationOffice !== destinationOffice) {
+        return NextResponse.json(
+          {
+            error: getWrongDestinationMessage(existing.destinationOffice!),
+            code: "WRONG_DESTINATION_OFFICE",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     if (

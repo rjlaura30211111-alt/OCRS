@@ -1,3 +1,9 @@
+export function documentRequiresDestination(
+  destinationOffice: string | null | undefined
+): boolean {
+  return Boolean(destinationOffice?.trim());
+}
+
 export function isWrongReceivingOffice(
   sessionOffice: string,
   destinationOffice: string | null | undefined
