@@ -22,6 +22,18 @@ function rethrowDbError(
     );
   }
 
+  if (/archived_documents/i.test(message)) {
+    throw new Error(
+      "Archive tables are not set up yet. Run supabase/run-pending-migrations.sql in the Supabase SQL Editor, then try again."
+    );
+  }
+
+  if (/destination_office/i.test(message)) {
+    throw new Error(
+      "Office Destination column is missing. Run supabase/run-pending-migrations.sql in the Supabase SQL Editor, then try again."
+    );
+  }
+
   if (/fetch failed|ENOTFOUND|ECONNREFUSED|network/i.test(message)) {
     throw new Error(
       "Could not connect to Supabase. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, and ensure the project is active."
