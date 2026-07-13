@@ -17,7 +17,6 @@ const OFFICES = [
   "ORPRMD-DLOS",
   "ORID",
   "OROD",
-  "ORLDDD",
   "ORCADD",
   "ORCD",
   "ORIDMD",

@@ -7,7 +7,6 @@ export const OFFICE_OPTIONS = [
   "ORPRMD-DLOS",
   "ORID",
   "OROD",
-  "ORLDDD",
   "ORCADD",
   "ORCD",
   "ORIDMD",
