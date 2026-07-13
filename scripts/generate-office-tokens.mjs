@@ -34,6 +34,11 @@ const OFFICES = [
   "RCEU",
   "RITO",
   "RPRMD-DLOS",
+  "RCSU",
+  "RLO",
+  "REU",
+  "RPO",
+  "RSTU",
 ];
 
 function loadEnvFile(filePath) {
