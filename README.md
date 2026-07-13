@@ -21,7 +21,7 @@ The routing slip always uses:
 templates/document-template.docx
 ```
 
-Placeholders: `{subject}`, `{referenceNumber}`, `{date}`, `{time}`, `{%qrCode}`.
+Placeholders: `{subject}`, `{referenceNumber}`, `{drafter}`, `{%qrCode}`. Date and time are stored in the database only — they are not printed on the Word slip.
 
 If placeholders break after editing in Word, run:
 

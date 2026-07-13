@@ -2,7 +2,6 @@ import Docxtemplater from "docxtemplater";
 import ImageModule from "docxtemplater-image-module-free";
 import PizZip from "pizzip";
 import type { ActionRequested } from "@/lib/actions";
-import { formatDisplayDate, formatDisplayTime } from "@/lib/datetime";
 import { highlightActionInDocument } from "@/lib/highlight-action";
 import { QR_WORD_SIZE_PX } from "@/lib/qr-config";
 import { readTemplateBuffer, TEMPLATE_FILENAME } from "@/lib/project-paths";
@@ -14,8 +13,6 @@ export type FillReportInput = {
   subject: string;
   referenceNumber: string;
   drafter: string;
-  date: string;
-  time: string;
   actionRequested: ActionRequested;
   qrPng: Buffer;
 };
@@ -24,8 +21,6 @@ export const TEMPLATE_PLACEHOLDERS = {
   subject: "{subject}",
   referenceNumber: "{referenceNumber}",
   drafter: "{drafter}",
-  date: "{date}",
-  time: "{time}",
   qrCode: "{%qrCode}",
 } as const;
 
@@ -86,8 +81,6 @@ export async function fillWordTemplate(input: FillReportInput): Promise<Buffer> 
       subject: input.subject.trim(),
       referenceNumber: input.referenceNumber.trim(),
       drafter: input.drafter.trim(),
-      date: formatDisplayDate(input.date),
-      time: formatDisplayTime(input.time),
       qrCode: input.qrPng.toString("base64"),
     });
   } catch (error) {

@@ -7,8 +7,6 @@ const REQUIRED_TAGS = [
   "{subject}",
   "{%qrCode}",
   "{referenceNumber}",
-  "{date}",
-  "{time}",
   "{drafter}",
 ];
 
@@ -57,31 +55,12 @@ function repairPreparedByPlaceholder(xml: string): string {
   );
 }
 
-function repairDatePlaceholders(xml: string): string {
-  if (xml.includes("{date}") && xml.includes("{time}")) {
-    return xml;
-  }
-
-  const datePattern =
-    /<w:t>June<\/w:t><\/w:r><w:r w:rsidR="00622F7A">[\s\S]*?<w:t>6<\/w:t><\/w:r>/;
-
-  if (!datePattern.test(xml)) {
-    return xml;
-  }
-
-  return xml.replace(
-    datePattern,
-    `<w:t>{date}</w:t></w:r><w:r w:rsidR="00622F7A"><w:rPr><w:rFonts w:ascii="Arial" w:eastAsia="Times New Roman" w:hAnsi="Arial" w:cs="Arial"/><w:color w:val="000000"/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve"> {time}</w:t></w:r>`
-  );
-}
-
 export function repairTemplateBuffer(input: Buffer): Buffer {
   const zip = new PizZip(input);
   let xml = zip.file("word/document.xml")?.asText() ?? "";
 
   xml = repairSplitPlaceholders(xml);
   xml = applyQrReferenceLayout(xml);
-  xml = repairDatePlaceholders(xml);
   xml = repairPreparedByPlaceholder(xml);
 
   const missing = REQUIRED_TAGS.filter((tag) => !xml.includes(tag));

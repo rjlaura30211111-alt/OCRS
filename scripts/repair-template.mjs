@@ -76,32 +76,13 @@ function repairPreparedByPlaceholder(xml) {
   );
 }
 
-function repairDatePlaceholders(xml) {
-  if (xml.includes("{date}") && xml.includes("{time}")) {
-    return xml;
-  }
-
-  const datePattern =
-    /<w:t>June<\/w:t><\/w:r><w:r w:rsidR="00622F7A">[\s\S]*?<w:t>6<\/w:t><\/w:r>/;
-
-  if (!datePattern.test(xml)) {
-    throw new Error("Could not find date section to patch.");
-  }
-
-  return xml.replace(
-    datePattern,
-    `<w:t>{date}</w:t></w:r><w:r w:rsidR="00622F7A"><w:rPr><w:rFonts w:ascii="Arial" w:eastAsia="Times New Roman" w:hAnsi="Arial" w:cs="Arial"/><w:color w:val="000000"/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve"> {time}</w:t></w:r>`
-  );
-}
-
 const zip = new PizZip(fs.readFileSync(templatePath));
 let xml = zip.file("word/document.xml").asText();
 xml = repairSplitPlaceholders(xml);
 xml = applyQrReferenceLayout(xml);
-xml = repairDatePlaceholders(xml);
 xml = repairPreparedByPlaceholder(xml);
 
-for (const tag of ["{subject}", "{%qrCode}", "{referenceNumber}", "{date}", "{time}", "{drafter}"]) {
+for (const tag of ["{subject}", "{%qrCode}", "{referenceNumber}", "{drafter}"]) {
   if (!xml.includes(tag)) {
     throw new Error(`Missing placeholder ${tag} after repair.`);
   }

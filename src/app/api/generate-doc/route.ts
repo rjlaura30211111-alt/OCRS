@@ -102,8 +102,6 @@ export async function POST(request: NextRequest) {
       subject,
       referenceNumber,
       drafter,
-      date,
-      time,
       actionRequested,
       qrPng,
     });
