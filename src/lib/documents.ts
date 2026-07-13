@@ -98,7 +98,7 @@ export type UpdateDocumentInput = {
   subject: string;
   drafter: string;
   actionRequested: ActionRequested;
-  currentOffice: string;
+  destinationOffice?: string | null;
 };
 
 type RoutingLogRow = {
@@ -534,20 +534,20 @@ export async function updateDocument(
     throw new Error("No Document Found");
   }
 
-  const office = input.currentOffice.trim();
-  if (!office) {
-    throw new Error("Office is required.");
+  const updatePayload: Record<string, string> = {
+    subject: input.subject.trim(),
+    drafter: input.drafter.trim(),
+    action_requested: input.actionRequested,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.destinationOffice !== undefined) {
+    updatePayload.destination_office = input.destinationOffice?.trim() ?? "";
   }
 
   const { data, error } = await supabase
     .from("documents")
-    .update({
-      subject: input.subject.trim(),
-      drafter: input.drafter.trim(),
-      action_requested: input.actionRequested,
-      current_office: office,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", existing.id)
     .select()
     .single();

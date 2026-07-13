@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidAction } from "@/lib/actions";
-import { toDocumentPayload, updateDocument } from "@/lib/documents";
+import {
+  getDocumentByReference,
+  getDocumentSubmitOffice,
+  toDocumentPayload,
+  updateDocument,
+} from "@/lib/documents";
+import {
+  canEditSubmissionAtOffice,
+  isOfficeAuthContext,
+  requireOfficeAuth,
+} from "@/lib/office-auth";
 import { isValidOfficeOption } from "@/lib/offices";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
@@ -8,6 +18,11 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireOfficeAuth(request);
+    if (!isOfficeAuthContext(auth)) {
+      return auth;
+    }
+
     const body = await request.json();
     const referenceNumber =
       typeof body.referenceNumber === "string"
@@ -19,8 +34,12 @@ export async function POST(request: NextRequest) {
       typeof body.drafter === "string" ? body.drafter.trim() : "";
     const actionRequested =
       typeof body.actionRequested === "string" ? body.actionRequested.trim() : "";
-    const currentOffice =
-      typeof body.currentOffice === "string" ? body.currentOffice.trim() : "";
+    const destinationOffice =
+      typeof body.destinationOffice === "string"
+        ? body.destinationOffice.trim()
+        : body.destinationOffice === null
+          ? null
+          : undefined;
 
     if (!referenceNumber) {
       return NextResponse.json(
@@ -44,9 +63,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isValidOfficeOption(currentOffice)) {
+    if (
+      destinationOffice !== undefined &&
+      destinationOffice !== null &&
+      !isValidOfficeOption(destinationOffice)
+    ) {
       return NextResponse.json(
-        { error: "Office is required." },
+        { error: "Invalid office destination." },
         { status: 400 }
       );
     }
@@ -61,12 +84,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const existing = await getDocumentByReference(referenceNumber);
+
+    if (!existing) {
+      return NextResponse.json({ error: "No Document Found" }, { status: 404 });
+    }
+
+    const submitOffice = await getDocumentSubmitOffice(
+      existing.id,
+      existing.currentOffice
+    );
+
+    if (
+      !canEditSubmissionAtOffice(
+        existing.currentOffice,
+        submitOffice,
+        auth.office
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "You can only edit submission details while the document is at your office.",
+        },
+        { status: 403 }
+      );
+    }
+
     const document = await updateDocument({
       referenceNumber,
       subject,
       drafter,
       actionRequested,
-      currentOffice,
+      destinationOffice,
     });
 
     return NextResponse.json({

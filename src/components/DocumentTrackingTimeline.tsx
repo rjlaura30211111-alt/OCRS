@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { ACTION_REQUESTED_OPTIONS, type ActionRequested } from "@/lib/actions";
 import {
   formatDispositionLabel,
   getReceiveDispositionOptions,
@@ -8,8 +9,11 @@ import {
   type ReceiveDisposition,
 } from "@/lib/dispositions";
 import { formatDisplayDate, formatDisplayTime } from "@/lib/datetime";
-import { canEditTrackingAtOffice } from "@/lib/office-permissions";
-import type { OfficeOption } from "@/lib/offices";
+import {
+  canEditSubmissionAtOffice,
+  canEditTrackingAtOffice,
+} from "@/lib/office-permissions";
+import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
 import { officeAuthHeaders } from "@/lib/office-session";
 
 export type TrackingEntry = {
@@ -30,6 +34,7 @@ export type SubmissionInfo = {
   submitOffice: string;
   submitLoggedAt: string;
   destinationOffice?: string | null;
+  actionRequested?: string;
 };
 
 function formatLoggedAt(value: string): string {
@@ -229,6 +234,258 @@ function DispositionBadge({ status }: { status: string }) {
   );
 }
 
+function EditSubmissionModal({
+  submission,
+  authOffice,
+  officeToken,
+  open,
+  onClose,
+  onSaved,
+}: {
+  submission: SubmissionInfo;
+  authOffice: OfficeOption;
+  officeToken: string;
+  open: boolean;
+  onClose: () => void;
+  onSaved: (submission: SubmissionInfo) => void;
+}) {
+  const [subject, setSubject] = useState(submission.subject);
+  const [drafter, setDrafter] = useState(submission.drafter);
+  const [destinationOffice, setDestinationOffice] = useState(
+    submission.destinationOffice ?? ""
+  );
+  const [actionRequested, setActionRequested] = useState<ActionRequested>(
+    (submission.actionRequested as ActionRequested) ?? ACTION_REQUESTED_OPTIONS[0]
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setSubject(submission.subject);
+    setDrafter(submission.drafter);
+    setDestinationOffice(submission.destinationOffice ?? "");
+    setActionRequested(
+      ACTION_REQUESTED_OPTIONS.includes(
+        submission.actionRequested as ActionRequested
+      )
+        ? (submission.actionRequested as ActionRequested)
+        : ACTION_REQUESTED_OPTIONS[0]
+    );
+    setError(null);
+  }, [open, submission]);
+
+  if (!open) {
+    return null;
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/documents/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...officeAuthHeaders(officeToken),
+        },
+        body: JSON.stringify({
+          referenceNumber: submission.referenceNumber,
+          subject: subject.trim(),
+          drafter: drafter.trim(),
+          actionRequested,
+          destinationOffice: destinationOffice.trim() || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to update submission.");
+      }
+
+      const doc = data.document;
+      onSaved({
+        ...submission,
+        subject: doc.subject,
+        drafter: doc.drafter,
+        destinationOffice: doc.destinationOffice ?? null,
+        actionRequested: doc.actionRequested,
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update submission.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="border-b border-slate-100 bg-gradient-to-r from-[#15325a] to-[#1a3f6f] px-5 py-4 text-white">
+          <h2 className="text-lg font-semibold">Edit Submission</h2>
+          <p className="mt-0.5 text-sm text-blue-100/80">{submission.submitOffice}</p>
+        </div>
+
+        <div className="space-y-3 p-5">
+          <div>
+            <label className="mb-1 block text-sm font-medium">Subject</label>
+            <textarea
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              rows={3}
+              className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Drafter</label>
+            <input
+              value={drafter}
+              onChange={(e) => setDrafter(e.target.value)}
+              className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Office Destination</label>
+            <select
+              value={destinationOffice}
+              onChange={(e) => setDestinationOffice(e.target.value)}
+              className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+            >
+              <option value="">No destination on file</option>
+              {OFFICE_OPTIONS.map((office) => (
+                <option key={office} value={office}>
+                  {office}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Action Requested</label>
+            <select
+              value={actionRequested}
+              onChange={(e) =>
+                setActionRequested(e.target.value as ActionRequested)
+              }
+              className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+            >
+              {ACTION_REQUESTED_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {error && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 rounded-lg bg-gradient-to-r from-[#1a3f6f] to-[#2563eb] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SubmitTrackingCard({
+  submission,
+  authOffice,
+  officeToken,
+  documentCurrentOffice,
+  readOnly = false,
+  onUpdated,
+}: {
+  submission: SubmissionInfo;
+  authOffice: OfficeOption | null;
+  officeToken: string;
+  documentCurrentOffice: string | null;
+  readOnly?: boolean;
+  onUpdated: (submission: SubmissionInfo) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const canEdit =
+    !readOnly &&
+    !!authOffice &&
+    !!officeToken &&
+    canEditSubmissionAtOffice(
+      documentCurrentOffice,
+      submission.submitOffice,
+      authOffice
+    );
+
+  return (
+    <>
+      <TrackingCardShell
+        office={submission.submitOffice}
+        variant="submit"
+        footer={
+          canEdit ? (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-md bg-amber-400/15 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-300/30 transition hover:bg-amber-400/25 hover:text-amber-200"
+            >
+              Edit
+            </button>
+          ) : readOnly ? (
+            <span className="text-[10px] uppercase tracking-wide text-white/45">
+              View only
+            </span>
+          ) : null
+        }
+      >
+        <CardField label="Subject" value={submission.subject} highlight />
+        <CardField label="Reference #" value={submission.referenceNumber} />
+        <CardField label="Drafter" value={submission.drafter} />
+        <CardField
+          label="Office Destination"
+          value={submission.destinationOffice ?? "—"}
+          highlight={Boolean(submission.destinationOffice)}
+        />
+        <CardField
+          label="Date/Time"
+          value={formatSentDateTime(submission.sentDate, submission.sentTime)}
+        />
+      </TrackingCardShell>
+
+      {canEdit && (
+        <EditSubmissionModal
+          submission={submission}
+          authOffice={authOffice!}
+          officeToken={officeToken}
+          open={editing}
+          onClose={() => setEditing(false)}
+          onSaved={onUpdated}
+        />
+      )}
+    </>
+  );
+}
+
 function EditRoutingModal({
   entry,
   referenceNumber,
@@ -382,6 +639,7 @@ function ReceiveTrackingCard({
   authOffice,
   officeToken,
   documentCurrentOffice,
+  destinationOffice,
   readOnly = false,
   onUpdated,
   completed,
@@ -392,6 +650,7 @@ function ReceiveTrackingCard({
   authOffice: OfficeOption | null;
   officeToken: string;
   documentCurrentOffice: string | null;
+  destinationOffice?: string | null;
   readOnly?: boolean;
   onUpdated: (tracking: TrackingEntry[]) => void;
   completed?: boolean;
@@ -453,6 +712,13 @@ function ReceiveTrackingCard({
               <DispositionBadge status={entry.status} />
             </dd>
           </div>
+          {entry.status === "Approved" && destinationOffice && (
+            <CardField
+              label="Office Destination"
+              value={destinationOffice}
+              highlight
+            />
+          )}
           <CardField label="Date/Time" value={formatLoggedAt(entry.loggedAt)} />
         </TrackingCardShell>
       </div>
@@ -482,6 +748,7 @@ export function DocumentTrackingTimeline({
   officeToken,
   readOnly = false,
   onTrackingUpdated,
+  onSubmissionUpdated,
 }: {
   submission: SubmissionInfo | null;
   tracking: TrackingEntry[];
@@ -492,6 +759,7 @@ export function DocumentTrackingTimeline({
   officeToken: string;
   readOnly?: boolean;
   onTrackingUpdated?: (tracking: TrackingEntry[]) => void;
+  onSubmissionUpdated?: (submission: SubmissionInfo) => void;
 }) {
   const receives = tracking.filter((entry) => entry.notes === "Document received");
 
@@ -549,26 +817,14 @@ export function DocumentTrackingTimeline({
       <div className="relative flex flex-col items-center">
         {submission && (
           <>
-            <TrackingCardShell office={submission.submitOffice} variant="submit">
-              <CardField label="Subject" value={submission.subject} highlight />
-              <CardField
-                label="Reference #"
-                value={submission.referenceNumber}
-              />
-              <CardField label="Drafter" value={submission.drafter} />
-              <CardField
-                label="Office Destination"
-                value={submission.destinationOffice ?? "—"}
-                highlight={Boolean(submission.destinationOffice)}
-              />
-              <CardField
-                label="Date/Time"
-                value={formatSentDateTime(
-                  submission.sentDate,
-                  submission.sentTime
-                )}
-              />
-            </TrackingCardShell>
+            <SubmitTrackingCard
+              submission={submission}
+              authOffice={authOffice}
+              officeToken={officeToken}
+              documentCurrentOffice={documentCurrentOffice}
+              readOnly={readOnly}
+              onUpdated={(updated) => onSubmissionUpdated?.(updated)}
+            />
             {(mainReceives.length > 0 || completionEntry) && (
               <TimelineConnector />
             )}
@@ -583,6 +839,7 @@ export function DocumentTrackingTimeline({
               authOffice={authOffice}
               officeToken={officeToken}
               documentCurrentOffice={documentCurrentOffice}
+              destinationOffice={submission?.destinationOffice}
               readOnly={readOnly}
               onUpdated={(updated) => onTrackingUpdated?.(updated)}
               step={(submission ? 2 : 1) + index}
@@ -609,6 +866,7 @@ export function DocumentTrackingTimeline({
                     authOffice={authOffice}
                     officeToken={officeToken}
                     documentCurrentOffice={documentCurrentOffice}
+                    destinationOffice={submission?.destinationOffice}
                     readOnly={readOnly}
                     onUpdated={(updated) => onTrackingUpdated?.(updated)}
                     completed
@@ -626,6 +884,7 @@ export function DocumentTrackingTimeline({
                   authOffice={authOffice}
                   officeToken={officeToken}
                   documentCurrentOffice={documentCurrentOffice}
+                  destinationOffice={submission?.destinationOffice}
                   readOnly={readOnly}
                   onUpdated={(updated) => onTrackingUpdated?.(updated)}
                   completed

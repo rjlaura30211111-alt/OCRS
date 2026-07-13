@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
         submitOffice: submitLog?.officeCode ?? document.currentOffice ?? "OCRS",
         submitLoggedAt: submitLog?.loggedAt ?? document.createdAt,
         destinationOffice: document.destinationOffice,
+        actionRequested: document.actionRequested,
       },
       tracking: tracking.map(toRoutingLogPayload),
     });

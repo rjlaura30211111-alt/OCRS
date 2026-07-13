@@ -101,6 +101,7 @@ export function TrackingDetailModal({
             submitOffice: doc.submitOffice,
             submitLoggedAt: doc.submitLoggedAt,
             destinationOffice: doc.destinationOffice ?? null,
+            actionRequested: doc.actionRequested,
           });
         } else {
           setSubmission(null);

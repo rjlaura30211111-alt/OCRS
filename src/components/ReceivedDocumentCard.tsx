@@ -432,6 +432,7 @@ export function ReceivedDocumentCard() {
             submitOffice: doc.submitOffice,
             submitLoggedAt: doc.submitLoggedAt,
             destinationOffice: doc.destinationOffice ?? null,
+            actionRequested: doc.actionRequested,
           });
         } else {
           setSubmission(null);
@@ -487,6 +488,22 @@ export function ReceivedDocumentCard() {
 
     setSelected(updated);
     setTracking(updatedTracking);
+  }
+
+  function handleSubmissionUpdated(updatedSubmission: SubmissionInfo) {
+    setSubmission(updatedSubmission);
+
+    if (!selected) {
+      return;
+    }
+
+    setSelected({
+      ...selected,
+      subject: updatedSubmission.subject,
+      drafter: updatedSubmission.drafter,
+      destinationOffice: updatedSubmission.destinationOffice ?? null,
+      actionRequested: updatedSubmission.actionRequested ?? selected.actionRequested,
+    });
   }
 
   function handleTrackingUpdated(updatedTracking: TrackingEntry[]) {
@@ -707,6 +724,7 @@ export function ReceivedDocumentCard() {
               documentCurrentOffice={selected.currentOffice}
               officeToken={session?.token ?? ""}
               onTrackingUpdated={handleTrackingUpdated}
+              onSubmissionUpdated={handleSubmissionUpdated}
             />
             {wrongDestinationBlocked && session && selected.destinationOffice && (
               <DocumentWrongDestinationNotice
