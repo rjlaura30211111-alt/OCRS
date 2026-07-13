@@ -1,4 +1,9 @@
 const OFFICE_TOKEN_PREFIX = "ocrs-office-token:";
+const OFFICE_TOKEN_PATTERN = /^[a-z][a-z0-9]{0,15}_[0-9a-f]{48}$/i;
+
+export function isOfficeTokenFormat(token: string): boolean {
+  return OFFICE_TOKEN_PATTERN.test(token.trim());
+}
 
 export function normalizeOfficeToken(raw: string): string {
   let token = raw.trim();
@@ -14,8 +19,8 @@ export function normalizeOfficeToken(raw: string): string {
     token = token.slice(OFFICE_TOKEN_PREFIX.length);
   }
 
-  // Accept prefixed QR payloads like "ORICTMD:orictmd_abc..."
-  const officePrefix = token.match(/^[A-Z]{2,8}:(.+)$/);
+  // Accept prefixed QR payloads like "ORICTMD:orictmd_abc..." or "ORPRMD-DLOS:orprmddlos_abc..."
+  const officePrefix = token.match(/^[A-Z][A-Z0-9-]{1,14}:(.+)$/);
   if (officePrefix && officePrefix[1].includes("_")) {
     token = officePrefix[1];
   }

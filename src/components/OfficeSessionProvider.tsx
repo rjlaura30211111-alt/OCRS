@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import type { OfficeOption } from "@/lib/offices";
-import { normalizeOfficeToken } from "@/lib/office-token-normalize";
+import { isOfficeTokenFormat, normalizeOfficeToken } from "@/lib/office-token-normalize";
 import {
   clearOfficeSession,
   readOfficeSession,
@@ -51,7 +51,7 @@ export function OfficeSessionProvider({
       throw new Error("Please enter your office access token.");
     }
 
-    if (!/^[a-z]{2,8}_[0-9a-f]{48}$/i.test(trimmed)) {
+    if (!isOfficeTokenFormat(trimmed)) {
       throw new Error(
         "Scanned value does not look like an office token. Scan the office QR from your PDF handout, not a document reference QR."
       );
