@@ -23,7 +23,6 @@ export const OFFICE_OPTIONS = [
   "RPIO",
   "RCEU",
   "RITO",
-  "RPRMD-DLOS",
   "RCSU",
   "RLO",
   "REU",
