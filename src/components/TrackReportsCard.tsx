@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ConfirmArchiveModal } from "@/components/ConfirmArchiveModal";
+import { QrScannerModal } from "@/components/QrScannerModal";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import {
   TrackingDetailModal,
@@ -44,6 +45,38 @@ function TrackIcon({ className = "h-5 w-5" }: { className?: string }) {
         d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"
       />
     </svg>
+  );
+}
+
+function ScanQrButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Scan QR code"
+      className="flex shrink-0 items-center justify-center rounded-lg bg-violet-600 px-3 py-2.5 text-white transition hover:bg-violet-700 sm:px-4"
+    >
+      <svg
+        aria-hidden
+        className="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.75}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M14.25 15.75h4.5M15.75 14.25v4.5"
+        />
+      </svg>
+      <span className="ml-2 hidden text-sm font-medium sm:inline">Scan QR</span>
+    </button>
   );
 }
 
@@ -163,6 +196,7 @@ export function TrackReportsCard() {
   const [highlightedRef, setHighlightedRef] = useState<string | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<ReportRow | null>(null);
   const [archiving, setArchiving] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const loadReports = useCallback(async () => {
@@ -284,6 +318,26 @@ export function TrackReportsCard() {
     }
   }, [archiveTarget, loadReports, selected, session]);
 
+  const handleScan = useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return;
+      }
+
+      setQuery(trimmed);
+
+      const match = reports.find(
+        (row) => row.referenceNumber.toLowerCase() === trimmed.toLowerCase()
+      );
+
+      if (match) {
+        setSelected(match);
+      }
+    },
+    [reports]
+  );
+
   const filtered = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
 
@@ -343,14 +397,17 @@ export function TrackReportsCard() {
             <label htmlFor="report-search" className="mb-1.5 block text-sm font-medium">
               Search reports
             </label>
-            <input
-              id="report-search"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Reference, subject, office..."
-              className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-            />
+            <div className="flex gap-2">
+              <input
+                id="report-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Reference, subject, office..."
+                className="min-w-0 flex-1 rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+              />
+              <ScanQrButton onClick={() => setScannerOpen(true)} />
+            </div>
           </div>
         </div>
 
@@ -600,6 +657,13 @@ export function TrackReportsCard() {
       />
 
       <TrackingDetailModal report={selected} onClose={() => setSelected(null)} />
+
+      <QrScannerModal
+        open={scannerOpen}
+        title="Scan Document QR"
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScan}
+      />
     </>
   );
 }
