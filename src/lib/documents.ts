@@ -695,3 +695,205 @@ export async function getDocumentSubmitOffice(
 
   return data?.office_code ?? fallbackOffice ?? "—";
 }
+
+type ArchivedDocumentRow = {
+  id: string;
+  original_document_id: string;
+  reference_number: string;
+  subject: string;
+  drafter: string;
+  action_requested: string;
+  sent_date: string;
+  sent_time: string;
+  status: string;
+  received_by: string | null;
+  current_office: string | null;
+  destination_office: string | null;
+  document_created_at: string;
+  document_updated_at: string;
+  archived_at: string;
+  archived_by_office: string;
+};
+
+type ArchivedRoutingLogRow = {
+  id: string;
+  archived_document_id: string;
+  original_log_id: string | null;
+  office_code: string;
+  received_by: string | null;
+  status: string;
+  logged_at: string;
+  notes: string | null;
+};
+
+export type ArchivedDocumentRecord = {
+  id: string;
+  originalDocumentId: string;
+  referenceNumber: string;
+  subject: string;
+  drafter: string;
+  actionRequested: string;
+  sentDate: string;
+  sentTime: string;
+  status: DocumentStatus;
+  receivedBy: string | null;
+  currentOffice: string | null;
+  destinationOffice: string | null;
+  documentCreatedAt: string;
+  documentUpdatedAt: string;
+  archivedAt: string;
+  archivedByOffice: string;
+};
+
+export type ArchivedReportRecord = ArchivedDocumentRecord & {
+  submitOffice: string;
+};
+
+function mapArchivedRow(row: ArchivedDocumentRow): ArchivedDocumentRecord {
+  return {
+    id: row.id,
+    originalDocumentId: row.original_document_id,
+    referenceNumber: row.reference_number,
+    subject: row.subject,
+    drafter: row.drafter,
+    actionRequested: row.action_requested,
+    sentDate: row.sent_date,
+    sentTime: row.sent_time,
+    status: row.status as DocumentStatus,
+    receivedBy: row.received_by,
+    currentOffice: row.current_office,
+    destinationOffice: row.destination_office,
+    documentCreatedAt: row.document_created_at,
+    documentUpdatedAt: row.document_updated_at,
+    archivedAt: row.archived_at,
+    archivedByOffice: row.archived_by_office,
+  };
+}
+
+export async function listArchivedDocuments(
+  limit = 500
+): Promise<ArchivedReportRecord[]> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("archived_documents")
+    .select()
+    .order("archived_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    rethrowDbError(error);
+  }
+
+  const documents = (data ?? []).map((row) =>
+    mapArchivedRow(row as ArchivedDocumentRow)
+  );
+
+  if (documents.length === 0) {
+    return [];
+  }
+
+  const archivedIds = documents.map((document) => document.id);
+
+  const { data: submitLogs, error: logError } = await supabase
+    .from("archived_document_routing_logs")
+    .select("archived_document_id, office_code")
+    .in("archived_document_id", archivedIds)
+    .eq("notes", "Document submitted");
+
+  if (logError) {
+    rethrowDbError(logError);
+  }
+
+  const submitOfficeByArchivedId = new Map<string, string>();
+  for (const log of submitLogs ?? []) {
+    submitOfficeByArchivedId.set(log.archived_document_id, log.office_code);
+  }
+
+  return documents.map((document) => ({
+    ...document,
+    submitOffice:
+      submitOfficeByArchivedId.get(document.id) ??
+      document.currentOffice ??
+      "—",
+  }));
+}
+
+export async function getArchivedDocumentByReference(
+  referenceNumber: string
+): Promise<ArchivedDocumentRecord | null> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("archived_documents")
+    .select()
+    .eq("reference_number", referenceNumber)
+    .order("archived_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    rethrowDbError(error);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapArchivedRow(data as ArchivedDocumentRow);
+}
+
+export async function getArchivedRoutingLogsByReference(
+  referenceNumber: string
+): Promise<RoutingLogEntry[]> {
+  const document = await getArchivedDocumentByReference(referenceNumber);
+
+  if (!document) {
+    return [];
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("archived_document_routing_logs")
+    .select()
+    .eq("archived_document_id", document.id)
+    .order("logged_at", { ascending: true });
+
+  if (error) {
+    rethrowDbError(error);
+  }
+
+  return (data ?? []).map((row) => {
+    const log = row as ArchivedRoutingLogRow;
+    return {
+      id: log.id,
+      officeCode: log.office_code,
+      receivedBy: log.received_by,
+      status: log.status,
+      loggedAt: log.logged_at,
+      notes: log.notes,
+    };
+  });
+}
+
+export function toArchivedReportPayload(document: ArchivedReportRecord) {
+  const trackingPhase: TrackingPhase = deriveTrackingPhase({
+    status: document.status,
+    submitOffice: document.submitOffice,
+    currentOffice: document.currentOffice,
+  });
+
+  return {
+    referenceNumber: document.referenceNumber,
+    subject: document.subject,
+    office: document.submitOffice,
+    drafter: document.drafter,
+    currentTrack: document.currentOffice,
+    status: document.status,
+    trackingPhase,
+    createdAt: document.documentCreatedAt,
+    updatedAt: document.documentUpdatedAt,
+    archivedAt: document.archivedAt,
+    archivedByOffice: document.archivedByOffice,
+  };
+}

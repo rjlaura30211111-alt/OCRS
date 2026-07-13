@@ -77,6 +77,19 @@ export function isOfficeAuthContext(
   return !(value instanceof NextResponse);
 }
 
+export function requireOcrsOffice(
+  auth: OfficeAuthContext
+): NextResponse | null {
+  if (auth.office !== "OCRS") {
+    return NextResponse.json(
+      { error: "This feature is only available to OCRS." },
+      { status: 403 }
+    );
+  }
+
+  return null;
+}
+
 export async function optionalOfficeAuth(
   request: NextRequest
 ): Promise<OfficeAuthContext | null> {

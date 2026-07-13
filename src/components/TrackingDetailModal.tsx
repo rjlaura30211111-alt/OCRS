@@ -6,6 +6,8 @@ import {
   type SubmissionInfo,
   type TrackingEntry,
 } from "@/components/DocumentTrackingTimeline";
+import { formatArchivedTimestamp } from "@/lib/datetime";
+import { officeAuthHeaders } from "@/lib/office-session";
 
 export type ReportSummary = {
   referenceNumber: string;
@@ -16,17 +18,27 @@ export type ReportSummary = {
   status: string;
 };
 
+type ArchiveInfo = {
+  archivedAt: string;
+  archivedByOffice: string;
+};
+
 type TrackingDetailModalProps = {
   report: ReportSummary | null;
   onClose: () => void;
+  source?: "active" | "archived";
+  officeToken?: string;
 };
 
 export function TrackingDetailModal({
   report,
   onClose,
+  source = "active",
+  officeToken = "",
 }: TrackingDetailModalProps) {
   const [tracking, setTracking] = useState<TrackingEntry[]>([]);
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
+  const [archiveInfo, setArchiveInfo] = useState<ArchiveInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +46,7 @@ export function TrackingDetailModal({
     if (!report) {
       setTracking([]);
       setSubmission(null);
+      setArchiveInfo(null);
       setError(null);
       return;
     }
@@ -46,13 +59,21 @@ export function TrackingDetailModal({
       setError(null);
 
       try {
-        const response = await fetch(
-          `/api/documents/tracking?ref=${encodeURIComponent(activeReport.referenceNumber)}`
-        );
+        const endpoint =
+          source === "archived"
+            ? `/api/documents/archived/tracking?ref=${encodeURIComponent(activeReport.referenceNumber)}`
+            : `/api/documents/tracking?ref=${encodeURIComponent(activeReport.referenceNumber)}`;
+
+        const response = await fetch(endpoint, {
+          headers:
+            source === "archived" && officeToken
+              ? officeAuthHeaders(officeToken)
+              : undefined,
+        });
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error ?? "Failed to load tracking.");
+          throw new Error(data.error ?? data.message ?? "Failed to load tracking.");
         }
 
         if (!active) {
@@ -60,6 +81,14 @@ export function TrackingDetailModal({
         }
 
         setTracking((data.tracking ?? []) as TrackingEntry[]);
+        setArchiveInfo(
+          source === "archived" && data.archived
+            ? {
+                archivedAt: data.archived.archivedAt,
+                archivedByOffice: data.archived.archivedByOffice,
+              }
+            : null
+        );
 
         const doc = data.document;
         if (doc) {
@@ -81,6 +110,7 @@ export function TrackingDetailModal({
           setError(err instanceof Error ? err.message : "Failed to load tracking.");
           setTracking([]);
           setSubmission(null);
+          setArchiveInfo(null);
         }
       } finally {
         if (active) {
@@ -94,7 +124,7 @@ export function TrackingDetailModal({
     return () => {
       active = false;
     };
-  }, [report]);
+  }, [officeToken, report, source]);
 
   if (!report) {
     return null;
@@ -103,16 +133,24 @@ export function TrackingDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 sm:items-center sm:p-4">
       <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
-        <div className="border-b border-slate-200 bg-gradient-to-r from-[#1a3f6f] to-[#2563eb] px-5 py-4 text-white sm:px-6">
+        <div
+          className={`border-b border-slate-200 px-5 py-4 text-white sm:px-6 ${
+            source === "archived"
+              ? "bg-gradient-to-r from-red-800 to-red-600"
+              : "bg-gradient-to-r from-[#1a3f6f] to-[#2563eb]"
+          }`}
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-100">
-                Tracking Tree · View Only
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/80">
+                {source === "archived"
+                  ? "Archived Report · View Only"
+                  : "Tracking Tree · View Only"}
               </p>
               <h2 className="mt-1 truncate font-mono text-lg font-bold">
                 {report.referenceNumber}
               </h2>
-              <p className="mt-1 line-clamp-2 text-sm text-blue-100">
+              <p className="mt-1 line-clamp-2 text-sm text-white/85">
                 {report.subject}
               </p>
             </div>
@@ -126,6 +164,16 @@ export function TrackingDetailModal({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            {archiveInfo && (
+              <>
+                <span className="rounded-md bg-white/20 px-2 py-1 font-semibold ring-1 ring-white/25">
+                  Archived {formatArchivedTimestamp(archiveInfo.archivedAt)}
+                </span>
+                <span className="rounded-md bg-white/15 px-2 py-1">
+                  By: <strong>{archiveInfo.archivedByOffice}</strong>
+                </span>
+              </>
+            )}
             <span className="rounded-md bg-white/15 px-2 py-1">
               Office: <strong>{report.office}</strong>
             </span>

@@ -29,3 +29,20 @@ export function getDefaultTimeValue(): string {
   const now = new Date();
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
+
+export function formatArchivedTimestamp(isoValue: string): string {
+  const date = new Date(isoValue);
+  if (Number.isNaN(date.getTime())) {
+    return isoValue;
+  }
+
+  return `${date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })} · ${date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })}`;
+}
