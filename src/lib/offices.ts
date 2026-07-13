@@ -4,6 +4,7 @@ export const OFFICE_OPTIONS = [
   "ODRDO",
   "OCRS",
   "ORPRMD",
+  "ORPRMD-DLOS",
   "ORID",
   "OROD",
   "ORLDDD",

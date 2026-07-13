@@ -14,6 +14,7 @@ const OFFICES = [
   "ODRDO",
   "OCRS",
   "ORPRMD",
+  "ORPRMD-DLOS",
   "ORID",
   "OROD",
   "ORLDDD",
@@ -67,6 +68,7 @@ function loadEnvFile(filePath) {
 const TOKEN_PREFIX_OVERRIDES = {
   ORLRDD: "rlrdd",
   "RPRMD-DLOS": "rprmddlos",
+  "ORPRMD-DLOS": "orprmddlos",
 };
 
 function createToken(officeCode) {
