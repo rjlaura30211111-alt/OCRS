@@ -418,6 +418,7 @@ export function ReceivedDocumentCard() {
             sentTime: doc.sentTime,
             submitOffice: doc.submitOffice,
             submitLoggedAt: doc.submitLoggedAt,
+            destinationOffice: doc.destinationOffice ?? null,
           });
         } else {
           setSubmission(null);

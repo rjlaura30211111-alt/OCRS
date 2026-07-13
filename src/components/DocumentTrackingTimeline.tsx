@@ -29,6 +29,7 @@ export type SubmissionInfo = {
   sentTime: string;
   submitOffice: string;
   submitLoggedAt: string;
+  destinationOffice?: string | null;
 };
 
 function formatLoggedAt(value: string): string {
@@ -554,6 +555,11 @@ export function DocumentTrackingTimeline({
                 value={submission.referenceNumber}
               />
               <CardField label="Drafter" value={submission.drafter} />
+              <CardField
+                label="Office Destination"
+                value={submission.destinationOffice ?? "—"}
+                highlight={Boolean(submission.destinationOffice)}
+              />
               <CardField
                 label="Date/Time"
                 value={formatSentDateTime(
