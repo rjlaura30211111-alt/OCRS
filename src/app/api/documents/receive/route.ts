@@ -3,10 +3,12 @@ import {
   canUseReceiveDisposition,
   isValidReceiveDisposition,
 } from "@/lib/dispositions";
+import { getWrongDestinationMessage } from "@/lib/document-destination";
 import {
   isOfficeAuthContext,
   requireOfficeAuth,
 } from "@/lib/office-auth";
+import { isValidOfficeOption } from "@/lib/offices";
 import {
   getDocumentByReference,
   getRoutingLogsByReference,
@@ -34,6 +36,10 @@ export async function POST(request: NextRequest) {
     const receivedBy =
       typeof body.receivedBy === "string" ? body.receivedBy.trim() : "";
     const status = typeof body.status === "string" ? body.status.trim() : "";
+    const destinationOffice =
+      typeof body.destinationOffice === "string"
+        ? body.destinationOffice.trim()
+        : "";
 
     if (!referenceNumber) {
       return NextResponse.json(
@@ -46,6 +52,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Received by is required." },
         { status: 400 }
+      );
+    }
+
+    if (!destinationOffice || !isValidOfficeOption(destinationOffice)) {
+      return NextResponse.json(
+        { error: "Office Destination is required." },
+        { status: 400 }
+      );
+    }
+
+    if (auth.office !== destinationOffice) {
+      return NextResponse.json(
+        {
+          error: getWrongDestinationMessage(destinationOffice),
+          code: "WRONG_DESTINATION_OFFICE",
+        },
+        { status: 403 }
       );
     }
 
@@ -79,6 +102,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "No Document Found" },
         { status: 404 }
+      );
+    }
+
+    if (
+      existing.destinationOffice &&
+      existing.destinationOffice !== destinationOffice
+    ) {
+      return NextResponse.json(
+        {
+          error: getWrongDestinationMessage(existing.destinationOffice),
+          code: "WRONG_DESTINATION_OFFICE",
+        },
+        { status: 403 }
       );
     }
 

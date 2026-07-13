@@ -8,6 +8,7 @@ type ConfirmSubmitModalProps = {
   referenceNumber: string;
   drafter: string;
   officeDivision: string;
+  destinationOffice: string;
   actionRequested: string;
   submitting: boolean;
   onConfirm: () => void;
@@ -20,6 +21,7 @@ export function ConfirmSubmitModal({
   referenceNumber,
   drafter,
   officeDivision,
+  destinationOffice,
   actionRequested,
   submitting,
   onConfirm,
@@ -69,6 +71,10 @@ export function ConfirmSubmitModal({
           <div>
             <dt className="font-medium text-muted">Office/Division</dt>
             <dd className="mt-1">{officeDivision}</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-muted">Office Destination</dt>
+            <dd className="mt-1">{destinationOffice}</dd>
           </div>
           <div>
             <dt className="font-medium text-muted">Action Requested</dt>

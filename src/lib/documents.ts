@@ -53,6 +53,7 @@ export type DocumentRecord = {
   status: DocumentStatus;
   receivedBy: string | null;
   currentOffice: string | null;
+  destinationOffice: string | null;
   updatedAt: string;
   createdAt: string;
 };
@@ -62,6 +63,7 @@ export type CreateDocumentInput = {
   subject: string;
   drafter: string;
   officeDivision: string;
+  destinationOffice: string;
   actionRequested: ActionRequested;
   date: string;
   time: string;
@@ -112,6 +114,7 @@ type DocumentRow = {
   status: string;
   received_by: string | null;
   current_office: string | null;
+  destination_office: string | null;
   updated_at: string;
   created_at: string;
 };
@@ -128,6 +131,7 @@ function mapRow(row: DocumentRow): DocumentRecord {
     status: row.status as DocumentStatus,
     receivedBy: row.received_by,
     currentOffice: row.current_office,
+    destinationOffice: row.destination_office,
     updatedAt: row.updated_at,
     createdAt: row.created_at,
   };
@@ -149,6 +153,7 @@ export async function createDocument(
       sent_time: input.time,
       status: "Pending",
       current_office: input.officeDivision,
+      destination_office: input.destinationOffice,
     })
     .select()
     .single();
@@ -548,6 +553,7 @@ export function toDocumentPayload(document: DocumentRecord) {
     rawStatus: document.status,
     timestamp: document.updatedAt,
     currentOffice: document.currentOffice,
+    destinationOffice: document.destinationOffice,
     sentDate: document.sentDate,
     sentTime: document.sentTime,
     createdAt: document.createdAt,
@@ -599,6 +605,7 @@ export async function archiveDocumentByReference(
       status: document.status,
       received_by: document.receivedBy,
       current_office: document.currentOffice,
+      destination_office: document.destinationOffice,
       document_created_at: document.createdAt,
       document_updated_at: document.updatedAt,
       archived_by_office: archivedByOffice.trim(),
