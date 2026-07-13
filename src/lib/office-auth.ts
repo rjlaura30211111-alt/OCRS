@@ -77,3 +77,19 @@ export function isOfficeAuthContext(
   return !(value instanceof NextResponse);
 }
 
+export async function optionalOfficeAuth(
+  request: NextRequest
+): Promise<OfficeAuthContext | null> {
+  const token = getTokenFromRequest(request);
+  if (!token) {
+    return null;
+  }
+
+  const office = await resolveOfficeByToken(token);
+  if (!office) {
+    return null;
+  }
+
+  return { office, token };
+}
+

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useOfficeSession } from "@/components/OfficeSessionProvider";
+import { officeAuthHeaders } from "@/lib/office-session";
 import type { TrackingPhase } from "@/lib/report-filters";
 
 type ReportRow = {
@@ -109,6 +111,7 @@ function SummaryCard({
 }
 
 export function HomeStatusSummary() {
+  const { session } = useOfficeSession();
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -116,7 +119,9 @@ export function HomeStatusSummary() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/documents/reports");
+      const response = await fetch("/api/documents/reports", {
+        headers: session ? officeAuthHeaders(session.token) : undefined,
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -129,7 +134,7 @@ export function HomeStatusSummary() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     void loadSummary();

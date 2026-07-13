@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listDocumentReports, toReportPayload } from "@/lib/documents";
+import { optionalOfficeAuth } from "@/lib/office-auth";
+import { matchesOfficeReportScope } from "@/lib/report-scope";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -19,11 +21,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const documents = await listDocumentReports(limit);
+    const auth = await optionalOfficeAuth(request);
+    let documents = await listDocumentReports(limit);
+
+    if (auth) {
+      documents = documents.filter((document) =>
+        matchesOfficeReportScope({
+          viewerOffice: auth.office,
+          submitOffice: document.submitOffice,
+          currentOffice: document.currentOffice,
+        })
+      );
+    }
 
     return NextResponse.json({
       count: documents.length,
       results: documents.map(toReportPayload),
+      scopedOffice: auth?.office ?? null,
     });
   } catch (error) {
     console.error("document reports error:", error);

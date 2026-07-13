@@ -33,6 +33,7 @@ const OFFICES = [
   "RPIO",
   "RCEU",
   "RITO",
+  "RPRMD-DLOS",
 ];
 
 function loadEnvFile(filePath) {
@@ -60,6 +61,7 @@ function loadEnvFile(filePath) {
 // Office display name can differ from the token prefix on printed PDFs.
 const TOKEN_PREFIX_OVERRIDES = {
   ORLRDD: "rlrdd",
+  "RPRMD-DLOS": "rprmddlos",
 };
 
 function createToken(officeCode) {

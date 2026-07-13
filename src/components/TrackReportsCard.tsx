@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import {
   TrackingDetailModal,
   type ReportSummary,
 } from "@/components/TrackingDetailModal";
 import { getDefaultDateValue } from "@/lib/datetime";
 import { formatDispositionLabel } from "@/lib/dispositions";
+import { officeAuthHeaders } from "@/lib/office-session";
 import {
   DATE_RANGE_OPTIONS,
   formatTrackingPhaseLabel,
@@ -141,6 +143,7 @@ function initialPhaseFilter(
 
 export function TrackReportsCard() {
   const searchParams = useSearchParams();
+  const { session } = useOfficeSession();
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,7 +161,9 @@ export function TrackReportsCard() {
     setError(null);
 
     try {
-      const response = await fetch("/api/documents/reports");
+      const response = await fetch("/api/documents/reports", {
+        headers: session ? officeAuthHeaders(session.token) : undefined,
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -172,7 +177,7 @@ export function TrackReportsCard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     void loadReports();
@@ -224,6 +229,11 @@ export function TrackReportsCard() {
                   Track my Reports
                 </h1>
                 <p className="text-sm text-muted">Document Tracker</p>
+                {session && (
+                  <p className="mt-1 text-xs font-medium text-emerald-800">
+                    Showing {session.office} documents only
+                  </p>
+                )}
               </div>
             </div>
           </div>
