@@ -1,4 +1,4 @@
-export const OCRS_COMPLETED_DISPOSITIONS = [
+export const AUTO_COMPLETED_DISPOSITIONS = [
   "Approved by CRS",
   "Noted By CRS",
   "Approved by RD",
@@ -11,7 +11,7 @@ export const RECEIVE_DISPOSITIONS = [
   "Return for Correction",
   "Uploaded to OLCIMS",
   "Approved-Completed",
-  ...OCRS_COMPLETED_DISPOSITIONS,
+  ...AUTO_COMPLETED_DISPOSITIONS,
 ] as const;
 
 export type ReceiveDisposition = (typeof RECEIVE_DISPOSITIONS)[number];
@@ -19,14 +19,13 @@ export type ReceiveDisposition = (typeof RECEIVE_DISPOSITIONS)[number];
 export const OCRS_ONLY_DISPOSITIONS = [
   "Uploaded to OLCIMS",
   "Approved-Completed",
-  ...OCRS_COMPLETED_DISPOSITIONS,
 ] as const;
 
 export const COMPLETED_DISPOSITIONS = [
   "Uploaded to OLCIMS",
   "Uploaded at OLCIMS",
   "Approved-Completed",
-  ...OCRS_COMPLETED_DISPOSITIONS,
+  ...AUTO_COMPLETED_DISPOSITIONS,
 ] as const;
 
 const STANDARD_RECEIVE_DISPOSITIONS: ReceiveDisposition[] = [
@@ -40,12 +39,12 @@ export function getReceiveDispositionOptions(office: string): ReceiveDisposition
   if (trimmed === "OCRS") {
     return [
       ...STANDARD_RECEIVE_DISPOSITIONS,
-      ...OCRS_COMPLETED_DISPOSITIONS,
+      ...AUTO_COMPLETED_DISPOSITIONS,
       "Uploaded to OLCIMS",
       "Approved-Completed",
     ];
   }
-  return [...STANDARD_RECEIVE_DISPOSITIONS];
+  return [...STANDARD_RECEIVE_DISPOSITIONS, ...AUTO_COMPLETED_DISPOSITIONS];
 }
 
 export function canUseReceiveDisposition(
@@ -93,11 +92,11 @@ export function getCompletedDispositionMessage(status: string): string {
     return "Marked as Approved-Completed at OCRS.";
   }
   if (
-    (OCRS_COMPLETED_DISPOSITIONS as readonly string[]).includes(
-      status as (typeof OCRS_COMPLETED_DISPOSITIONS)[number]
+    (AUTO_COMPLETED_DISPOSITIONS as readonly string[]).includes(
+      status as (typeof AUTO_COMPLETED_DISPOSITIONS)[number]
     )
   ) {
-    return `Marked as ${formatDispositionLabel(status)} at OCRS.`;
+    return `Document marked as ${formatDispositionLabel(status)}.`;
   }
   if (isCompletedDisposition(status)) {
     return "Uploaded to OLCIMS.";
