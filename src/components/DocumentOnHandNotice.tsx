@@ -31,11 +31,11 @@ export function DocumentOnHandNotice({
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold text-sky-950">
-              Already on-hand at {office}
+              The report you are scanning is currently at your office
             </p>
             <p className="mt-0.5 text-xs leading-relaxed text-sky-800/90">
-              This document is currently logged at your office. No need to scan
-              it again — check your Office Inbox or routing timeline below.
+              This document is already on-hand at {office}. Check your Office
+              Inbox or the routing timeline below instead of scanning again.
             </p>
           </div>
         </div>

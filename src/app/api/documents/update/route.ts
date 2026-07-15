@@ -11,7 +11,6 @@ import {
   isOfficeAuthContext,
   requireOfficeAuth,
 } from "@/lib/office-auth";
-import { isValidOfficeOption } from "@/lib/offices";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -34,12 +33,6 @@ export async function POST(request: NextRequest) {
       typeof body.drafter === "string" ? body.drafter.trim() : "";
     const actionRequested =
       typeof body.actionRequested === "string" ? body.actionRequested.trim() : "";
-    const destinationOffice =
-      typeof body.destinationOffice === "string"
-        ? body.destinationOffice.trim()
-        : body.destinationOffice === null
-          ? null
-          : undefined;
 
     if (!referenceNumber) {
       return NextResponse.json(
@@ -59,17 +52,6 @@ export async function POST(request: NextRequest) {
     if (!isValidAction(actionRequested)) {
       return NextResponse.json(
         { error: "Invalid action requested." },
-        { status: 400 }
-      );
-    }
-
-    if (
-      destinationOffice !== undefined &&
-      destinationOffice !== null &&
-      !isValidOfficeOption(destinationOffice)
-    ) {
-      return NextResponse.json(
-        { error: "Invalid office destination." },
         { status: 400 }
       );
     }
@@ -116,7 +98,6 @@ export async function POST(request: NextRequest) {
       subject,
       drafter,
       actionRequested,
-      destinationOffice,
     });
 
     return NextResponse.json({

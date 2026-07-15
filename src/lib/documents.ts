@@ -80,7 +80,6 @@ export type CreateDocumentInput = {
   subject: string;
   drafter: string;
   officeDivision: string;
-  destinationOffice: string;
   actionRequested: ActionRequested;
   date: string;
   time: string;
@@ -91,7 +90,6 @@ export type ReceiveDocumentInput = {
   receivedBy: string;
   status: ReceiveDisposition;
   currentOffice: string;
-  destinationOffice?: string | null;
 };
 
 export type UpdateDocumentInput = {
@@ -99,7 +97,6 @@ export type UpdateDocumentInput = {
   subject: string;
   drafter: string;
   actionRequested: ActionRequested;
-  destinationOffice?: string | null;
 };
 
 type RoutingLogRow = {
@@ -171,7 +168,7 @@ export async function createDocument(
       sent_time: input.time,
       status: "Pending",
       current_office: input.officeDivision,
-      destination_office: input.destinationOffice,
+      destination_office: null,
     })
     .select()
     .single();
@@ -499,10 +496,6 @@ export async function receiveDocument(
     updated_at: receivedAt,
   };
 
-  if (input.destinationOffice?.trim()) {
-    updatePayload.destination_office = input.destinationOffice.trim();
-  }
-
   const { data, error } = await supabase
     .from("documents")
     .update(updatePayload)
@@ -546,10 +539,6 @@ export async function updateDocument(
     action_requested: input.actionRequested,
     updated_at: new Date().toISOString(),
   };
-
-  if (input.destinationOffice !== undefined) {
-    updatePayload.destination_office = input.destinationOffice?.trim() ?? "";
-  }
 
   const { data, error } = await supabase
     .from("documents")

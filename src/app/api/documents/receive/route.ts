@@ -4,14 +4,9 @@ import {
   isValidReceiveDisposition,
 } from "@/lib/dispositions";
 import {
-  documentRequiresDestination,
-  getWrongDestinationMessage,
-} from "@/lib/document-destination";
-import {
   isOfficeAuthContext,
   requireOfficeAuth,
 } from "@/lib/office-auth";
-import { isValidOfficeOption } from "@/lib/offices";
 import {
   getDocumentByReference,
   getRoutingLogsByReference,
@@ -39,10 +34,6 @@ export async function POST(request: NextRequest) {
     const receivedBy =
       typeof body.receivedBy === "string" ? body.receivedBy.trim() : "";
     const status = typeof body.status === "string" ? body.status.trim() : "";
-    const destinationOffice =
-      typeof body.destinationOffice === "string"
-        ? body.destinationOffice.trim()
-        : "";
 
     if (!referenceNumber) {
       return NextResponse.json(
@@ -72,23 +63,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!destinationOffice || !isValidOfficeOption(destinationOffice)) {
-      return NextResponse.json(
-        { error: "Office Destination is required." },
-        { status: 400 }
-      );
-    }
-
-    if (auth.office !== destinationOffice) {
-      return NextResponse.json(
-        {
-          error: getWrongDestinationMessage(destinationOffice),
-          code: "WRONG_DESTINATION_OFFICE",
-        },
-        { status: 403 }
-      );
-    }
-
     if (!isSupabaseConfigured()) {
       return NextResponse.json(
         {
@@ -109,25 +83,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      documentRequiresDestination(existing.destinationOffice) &&
-      existing.destinationOffice !== destinationOffice
-    ) {
-      return NextResponse.json(
-        {
-          error: getWrongDestinationMessage(existing.destinationOffice!),
-          code: "WRONG_DESTINATION_OFFICE",
-        },
-        { status: 403 }
-      );
-    }
-
-    if (
       existing.currentOffice?.trim() === auth.office &&
       (await hasOfficeReceivedDocument(referenceNumber, auth.office))
     ) {
       return NextResponse.json(
         {
-          error: `This document is already on-hand at ${auth.office}. Check your Office Inbox instead of scanning again.`,
+          error:
+            "The report you are scanning is currently at your office. Check your Office Inbox instead of scanning again.",
           code: "DOCUMENT_ON_HAND",
         },
         { status: 409 }
@@ -139,7 +101,6 @@ export async function POST(request: NextRequest) {
       receivedBy,
       status,
       currentOffice: auth.office,
-      destinationOffice,
     });
 
     const tracking = await getRoutingLogsByReference(referenceNumber);

@@ -22,10 +22,6 @@ export async function POST(request: NextRequest) {
       typeof body.drafter === "string" ? body.drafter.trim() : "";
     const officeDivision =
       typeof body.officeDivision === "string" ? body.officeDivision.trim() : "";
-    const destinationOffice =
-      typeof body.destinationOffice === "string"
-        ? body.destinationOffice.trim()
-        : "";
     const date = typeof body.date === "string" ? body.date.trim() : "";
     const time = typeof body.time === "string" ? body.time.trim() : "";
     const actionRequested =
@@ -50,13 +46,6 @@ export async function POST(request: NextRequest) {
     if (!isValidOfficeDivision(officeDivision)) {
       return NextResponse.json(
         { error: "Office/Division is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!isValidOfficeDivision(destinationOffice)) {
-      return NextResponse.json(
-        { error: "Office Destination is required." },
         { status: 400 }
       );
     }
@@ -91,7 +80,6 @@ export async function POST(request: NextRequest) {
       subject,
       drafter,
       officeDivision,
-      destinationOffice,
       actionRequested,
       date,
       time,

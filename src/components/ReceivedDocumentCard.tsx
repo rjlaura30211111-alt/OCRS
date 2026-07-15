@@ -3,24 +3,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { isDocumentOnHandAtOffice } from "@/lib/document-on-hand";
 import {
-  getWrongDestinationMessage,
-  isWrongReceivingOffice,
-} from "@/lib/document-destination";
-import {
   formatDispositionLabel,
   getCompletedDispositionMessage,
   getReceiveDispositionOptions,
   isCompletedDisposition,
   type ReceiveDisposition,
 } from "@/lib/dispositions";
-import { OFFICE_OPTIONS, isValidOfficeOption, type OfficeOption } from "@/lib/offices";
+import { type OfficeOption } from "@/lib/offices";
 import {
   formatDisplayDate,
   formatDisplayTime,
 } from "@/lib/datetime";
 import { officeAuthHeaders } from "@/lib/office-session";
 import { DocumentOnHandNotice } from "@/components/DocumentOnHandNotice";
-import { DocumentWrongDestinationNotice } from "@/components/DocumentWrongDestinationNotice";
 import {
   DocumentTrackingTimeline,
   type SubmissionInfo,
@@ -109,9 +104,6 @@ function ReceiveForm({
   const dispositionOptions = getReceiveDispositionOptions(sessionOffice);
 
   const [receivedBy, setReceivedBy] = useState("");
-  const [destinationOffice, setDestinationOffice] = useState<OfficeOption | "">(
-    ""
-  );
   const [disposition, setDisposition] = useState<ReceiveDisposition>(
     dispositionOptions[0]
   );
@@ -121,12 +113,6 @@ function ReceiveForm({
 
   useEffect(() => {
     setReceivedBy(getSavedReceivedByName());
-    setDestinationOffice(
-      document.destinationOffice &&
-        isValidOfficeOption(document.destinationOffice)
-        ? document.destinationOffice
-        : sessionOffice
-    );
     const options = getReceiveDispositionOptions(sessionOffice);
     setDisposition((current) =>
       options.includes(current) ? current : options[0]
@@ -140,24 +126,6 @@ function ReceiveForm({
   async function handleSubmit() {
     if (!receivedBy.trim()) {
       setError("Please enter who received the document.");
-      return;
-    }
-
-    if (!destinationOffice) {
-      setError("Please select the office destination.");
-      return;
-    }
-
-    if (sessionOffice !== destinationOffice) {
-      setError(getWrongDestinationMessage(destinationOffice));
-      return;
-    }
-
-    if (
-      document.destinationOffice &&
-      document.destinationOffice !== destinationOffice
-    ) {
-      setError(getWrongDestinationMessage(document.destinationOffice));
       return;
     }
 
@@ -178,7 +146,6 @@ function ReceiveForm({
           referenceNumber: document.referenceNumber,
           receivedBy: receivedBy.trim(),
           status: disposition,
-          destinationOffice,
         }),
       });
 
@@ -216,42 +183,6 @@ function ReceiveForm({
             </p>
           </div>
         </div>
-
-        <div>
-          <label
-            htmlFor="destination-office"
-            className="mb-1.5 block text-sm font-medium"
-          >
-            Office Destination
-          </label>
-          <select
-            id="destination-office"
-            value={destinationOffice}
-            onChange={(e) =>
-              setDestinationOffice(e.target.value as OfficeOption)
-            }
-            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="">Select office destination...</option>
-            {OFFICE_OPTIONS.map((office) => (
-              <option key={office} value={office}>
-                {office}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1.5 text-xs text-muted">
-            {document.destinationOffice
-              ? "Confirm the office this document is addressed to. Your office must match the destination to receive it."
-              : "Select the office this document is addressed to. Your office must match the destination to receive it."}
-          </p>
-        </div>
-
-        {!document.destinationOffice && (
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
-            This report has no office destination on file yet (older routing slip).
-            Select the correct destination office above.
-          </p>
-        )}
 
         <div>
           <label htmlFor="received-by" className="mb-1.5 block text-sm font-medium">
@@ -402,14 +333,6 @@ export function ReceivedDocumentCard() {
     session &&
     isScanReceiveBlocked(selected, session.office, selectionSource);
 
-  const effectiveDestination =
-    selected?.destinationOffice ?? submission?.destinationOffice ?? null;
-
-  const wrongDestinationBlocked =
-    selected &&
-    session &&
-    isWrongReceivingOffice(session.office, effectiveDestination);
-
   const fetchTracking = useCallback(async (ref: string) => {
     setTrackingLoading(true);
     try {
@@ -429,7 +352,6 @@ export function ReceivedDocumentCard() {
             sentTime: doc.sentTime,
             submitOffice: doc.submitOffice,
             submitLoggedAt: doc.submitLoggedAt,
-            destinationOffice: doc.destinationOffice ?? null,
             actionRequested: doc.actionRequested,
           });
         } else {
@@ -499,7 +421,6 @@ export function ReceivedDocumentCard() {
       ...selected,
       subject: updatedSubmission.subject,
       drafter: updatedSubmission.drafter,
-      destinationOffice: updatedSubmission.destinationOffice ?? null,
       actionRequested: updatedSubmission.actionRequested ?? selected.actionRequested,
     });
   }
@@ -724,14 +645,6 @@ export function ReceivedDocumentCard() {
               onTrackingUpdated={handleTrackingUpdated}
               onSubmissionUpdated={handleSubmissionUpdated}
             />
-            {wrongDestinationBlocked && session && effectiveDestination && (
-              <DocumentWrongDestinationNotice
-                destinationOffice={effectiveDestination}
-                sessionOffice={session.office}
-                referenceNumber={selected.referenceNumber}
-                subject={selected.subject}
-              />
-            )}
             {scanReceiveBlocked && session && (
               <DocumentOnHandNotice
                 office={session.office}
@@ -765,13 +678,9 @@ export function ReceivedDocumentCard() {
                   {getCompletedDispositionMessage(selected.rawStatus)}
                 </p>
               </div>
-            ) : scanReceiveBlocked || wrongDestinationBlocked ? null : (
+            ) : scanReceiveBlocked ? null : (
               <ReceiveForm
-                document={{
-                  ...selected,
-                  destinationOffice:
-                    selected.destinationOffice ?? submission?.destinationOffice ?? null,
-                }}
+                document={selected}
                 sessionOffice={session.office}
                 officeToken={session.token}
                 onSaved={handleDocumentSaved}

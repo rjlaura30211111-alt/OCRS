@@ -100,7 +100,6 @@ export function TrackingDetailModal({
             sentTime: doc.sentTime,
             submitOffice: doc.submitOffice,
             submitLoggedAt: doc.submitLoggedAt,
-            destinationOffice: doc.destinationOffice ?? null,
             actionRequested: doc.actionRequested,
           });
         } else {
@@ -178,11 +177,6 @@ export function TrackingDetailModal({
             <span className="rounded-md bg-white/15 px-2 py-1">
               Office: <strong>{report.office}</strong>
             </span>
-            {submission?.destinationOffice && (
-              <span className="rounded-md bg-amber-400/25 px-2 py-1 ring-1 ring-amber-200/40">
-                Destination: <strong>{submission.destinationOffice}</strong>
-              </span>
-            )}
             <span className="rounded-md bg-white/15 px-2 py-1">
               Current: <strong>{report.currentTrack ?? "—"}</strong>
             </span>

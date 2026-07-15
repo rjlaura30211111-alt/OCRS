@@ -23,7 +23,6 @@ export function SubmitReportCard() {
   const [referenceNumber, setReferenceNumber] = useState("");
   const [drafter, setDrafter] = useState("");
   const [officeDivision, setOfficeDivision] = useState<OfficeOption | "">("");
-  const [destinationOffice, setDestinationOffice] = useState<OfficeOption | "">("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [ready, setReady] = useState(false);
@@ -75,10 +74,6 @@ export function SubmitReportCard() {
       setError("Please select an office/division.");
       return false;
     }
-    if (!destinationOffice) {
-      setError("Please select an office destination.");
-      return false;
-    }
     if (!date) {
       setError("Please select a date.");
       return false;
@@ -111,7 +106,6 @@ export function SubmitReportCard() {
           referenceNumber: referenceNumber.trim(),
           drafter: drafter.trim(),
           officeDivision,
-          destinationOffice,
           date,
           time,
           actionRequested,
@@ -248,33 +242,6 @@ export function SubmitReportCard() {
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="destination-office"
-              className="mb-2 block text-sm font-medium"
-            >
-              Office Destination:
-            </label>
-            <select
-              id="destination-office"
-              value={destinationOffice}
-              onChange={(e) =>
-                setDestinationOffice(e.target.value as OfficeOption)
-              }
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="">Select office destination...</option>
-              {OFFICE_OPTIONS.map((office) => (
-                <option key={office} value={office}>
-                  {office}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1.5 text-xs text-muted">
-              Select the office that should receive this report first.
-            </p>
-          </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="date" className="mb-2 block text-sm font-medium">
@@ -351,7 +318,6 @@ export function SubmitReportCard() {
         referenceNumber={referenceNumber.trim()}
         drafter={drafter.trim()}
         officeDivision={officeDivision}
-        destinationOffice={destinationOffice}
         actionRequested={actionRequested}
         submitting={submitting}
         onConfirm={handleConfirmSubmit}

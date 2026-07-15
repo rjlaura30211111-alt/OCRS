@@ -13,7 +13,7 @@ import {
   canEditSubmissionAtOffice,
   canEditTrackingAtOffice,
 } from "@/lib/office-permissions";
-import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
+import type { OfficeOption } from "@/lib/offices";
 import { officeAuthHeaders } from "@/lib/office-session";
 
 export type TrackingEntry = {
@@ -33,7 +33,6 @@ export type SubmissionInfo = {
   sentTime: string;
   submitOffice: string;
   submitLoggedAt: string;
-  destinationOffice?: string | null;
   actionRequested?: string;
 };
 
@@ -251,9 +250,6 @@ function EditSubmissionModal({
 }) {
   const [subject, setSubject] = useState(submission.subject);
   const [drafter, setDrafter] = useState(submission.drafter);
-  const [destinationOffice, setDestinationOffice] = useState(
-    submission.destinationOffice ?? ""
-  );
   const [actionRequested, setActionRequested] = useState<ActionRequested>(
     (submission.actionRequested as ActionRequested) ?? ACTION_REQUESTED_OPTIONS[0]
   );
@@ -267,7 +263,6 @@ function EditSubmissionModal({
 
     setSubject(submission.subject);
     setDrafter(submission.drafter);
-    setDestinationOffice(submission.destinationOffice ?? "");
     setActionRequested(
       ACTION_REQUESTED_OPTIONS.includes(
         submission.actionRequested as ActionRequested
@@ -298,7 +293,6 @@ function EditSubmissionModal({
           subject: subject.trim(),
           drafter: drafter.trim(),
           actionRequested,
-          destinationOffice: destinationOffice.trim() || null,
         }),
       });
 
@@ -313,7 +307,6 @@ function EditSubmissionModal({
         ...submission,
         subject: doc.subject,
         drafter: doc.drafter,
-        destinationOffice: doc.destinationOffice ?? null,
         actionRequested: doc.actionRequested,
       });
       onClose();
@@ -349,21 +342,6 @@ function EditSubmissionModal({
               onChange={(e) => setDrafter(e.target.value)}
               className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Office Destination</label>
-            <select
-              value={destinationOffice}
-              onChange={(e) => setDestinationOffice(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
-            >
-              <option value="">No destination on file</option>
-              {OFFICE_OPTIONS.map((office) => (
-                <option key={office} value={office}>
-                  {office}
-                </option>
-              ))}
-            </select>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Action Requested</label>
@@ -461,11 +439,6 @@ function SubmitTrackingCard({
         <CardField label="Subject" value={submission.subject} highlight />
         <CardField label="Reference #" value={submission.referenceNumber} />
         <CardField label="Drafter" value={submission.drafter} />
-        <CardField
-          label="Office Destination"
-          value={submission.destinationOffice ?? "—"}
-          highlight={Boolean(submission.destinationOffice)}
-        />
         <CardField
           label="Date/Time"
           value={formatSentDateTime(submission.sentDate, submission.sentTime)}
@@ -639,7 +612,6 @@ function ReceiveTrackingCard({
   authOffice,
   officeToken,
   documentCurrentOffice,
-  destinationOffice,
   readOnly = false,
   onUpdated,
   completed,
@@ -650,7 +622,6 @@ function ReceiveTrackingCard({
   authOffice: OfficeOption | null;
   officeToken: string;
   documentCurrentOffice: string | null;
-  destinationOffice?: string | null;
   readOnly?: boolean;
   onUpdated: (tracking: TrackingEntry[]) => void;
   completed?: boolean;
@@ -712,13 +683,6 @@ function ReceiveTrackingCard({
               <DispositionBadge status={entry.status} />
             </dd>
           </div>
-          {entry.status === "Approved" && destinationOffice && (
-            <CardField
-              label="Office Destination"
-              value={destinationOffice}
-              highlight
-            />
-          )}
           <CardField label="Date/Time" value={formatLoggedAt(entry.loggedAt)} />
         </TrackingCardShell>
       </div>
@@ -839,7 +803,6 @@ export function DocumentTrackingTimeline({
               authOffice={authOffice}
               officeToken={officeToken}
               documentCurrentOffice={documentCurrentOffice}
-              destinationOffice={submission?.destinationOffice}
               readOnly={readOnly}
               onUpdated={(updated) => onTrackingUpdated?.(updated)}
               step={(submission ? 2 : 1) + index}
@@ -866,7 +829,6 @@ export function DocumentTrackingTimeline({
                     authOffice={authOffice}
                     officeToken={officeToken}
                     documentCurrentOffice={documentCurrentOffice}
-                    destinationOffice={submission?.destinationOffice}
                     readOnly={readOnly}
                     onUpdated={(updated) => onTrackingUpdated?.(updated)}
                     completed
@@ -884,7 +846,6 @@ export function DocumentTrackingTimeline({
                   authOffice={authOffice}
                   officeToken={officeToken}
                   documentCurrentOffice={documentCurrentOffice}
-                  destinationOffice={submission?.destinationOffice}
                   readOnly={readOnly}
                   onUpdated={(updated) => onTrackingUpdated?.(updated)}
                   completed
