@@ -90,3 +90,26 @@ UPDATE archived_documents SET current_office = 'ORPRMD-DLOS' WHERE current_offic
 UPDATE archived_documents SET destination_office = 'ORPRMD-DLOS' WHERE destination_office = 'RPRMD-DLOS';
 UPDATE archived_documents SET archived_by_office = 'ORPRMD-DLOS' WHERE archived_by_office = 'RPRMD-DLOS';
 UPDATE archived_document_routing_logs SET office_code = 'ORPRMD-DLOS' WHERE office_code = 'RPRMD-DLOS';
+
+-- 3) Allow multiple tokens per office + restore legacy RPRMD-DLOS printed QR
+ALTER TABLE office_access_tokens
+  ADD COLUMN IF NOT EXISTS id UUID DEFAULT gen_random_uuid();
+
+UPDATE office_access_tokens
+SET id = gen_random_uuid()
+WHERE id IS NULL;
+
+ALTER TABLE office_access_tokens
+  ALTER COLUMN id SET NOT NULL;
+
+ALTER TABLE office_access_tokens DROP CONSTRAINT IF EXISTS office_access_tokens_pkey;
+
+ALTER TABLE office_access_tokens
+  ADD CONSTRAINT office_access_tokens_pkey PRIMARY KEY (id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_office_access_tokens_token_unique
+  ON office_access_tokens (access_token);
+
+INSERT INTO office_access_tokens (office_code, access_token)
+VALUES ('ORPRMD-DLOS', 'rprmddlos_88a3795a322f0d2392c4dabeadb5d500be07809a065b6995')
+ON CONFLICT (access_token) DO NOTHING;

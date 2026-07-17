@@ -12,6 +12,7 @@
     "generate-office-tokens": "node scripts/generate-office-tokens.mjs",
     "generate-office-tokens:additional": "node scripts/generate-office-tokens.mjs --only=ORLRDD,RMDU,RPIO,RCEU,RITO",
     "generate-office-tokens:orprmd-dlos": "node scripts/generate-office-tokens.mjs --only=ORPRMD-DLOS",
+    "fix-orprmd-dlos-token": "node scripts/fix-orprmd-dlos-token.mjs",
     "generate-office-tokens:rcsu-batch": "node scripts/generate-office-tokens.mjs --only=RCSU,RLO,REU,RPO,RSTU",
     "sync-office-tokens": "node scripts/sync-office-tokens-from-file.mjs",
     "restore-first-batch-tokens": "node scripts/restore-first-batch-tokens.mjs",
