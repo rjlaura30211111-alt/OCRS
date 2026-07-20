@@ -12,6 +12,7 @@ import { ConfirmSubmitModal } from "@/components/ConfirmSubmitModal";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import { SubmitAlertModal } from "@/components/SubmitAlertModal";
 import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
+import { PageCard } from "@/components/PageCard";
 
 function isDuplicateReferenceError(message: string): boolean {
   return /reference number already exists/i.test(message);
@@ -155,12 +156,12 @@ export function SubmitReportCard() {
 
   return (
     <>
-      <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8 lg:p-10">
-        <div className="mb-6 text-center lg:mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+      <PageCard className="lg:p-10">
+        <div className="mb-4 text-center sm:mb-6 lg:mb-8">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
             Document Tracker
           </h1>
-          <p className="mt-1 text-sm text-muted">Submit Report</p>
+          <p className="mt-0.5 text-sm text-muted">Submit Report</p>
         </div>
 
         <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-4 lg:space-y-0">
@@ -310,7 +311,7 @@ export function SubmitReportCard() {
             </p>
           )}
         </div>
-      </div>
+      </PageCard>
 
       <ConfirmSubmitModal
         open={showConfirm}

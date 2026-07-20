@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { OcrsDeleteModal, type OcrsDeleteEntryInfo } from "@/components/OcrsDeleteModal";
 import { RequestDeletionModal } from "@/components/RequestDeletionModal";
 import { QrScannerModal } from "@/components/QrScannerModal";
+import { PageCard } from "@/components/PageCard";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import {
   TrackingDetailModal,
@@ -439,7 +440,7 @@ export function TrackReportsCard() {
 
   return (
     <>
-      <div className="w-full rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6 lg:p-8">
+      <PageCard>
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2">
@@ -702,7 +703,7 @@ export function TrackReportsCard() {
             </div>
           </>
         )}
-      </div>
+      </PageCard>
 
       {contextMenu && session && (
         <div

@@ -28,6 +28,7 @@ import {
   syncReceiveDefaults,
 } from "@/components/OfficeInbox";
 import { QrScannerModal } from "@/components/QrScannerModal";
+import { PageCard } from "@/components/PageCard";
 
 export type DocumentLookup = {
   referenceNumber: string;
@@ -565,20 +566,20 @@ export function ReceivedDocumentCard() {
 
   return (
     <>
-      <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8 lg:p-10">
+      <PageCard className="lg:p-10">
         <div
           className={
             selected
-              ? "lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10"
-              : undefined
+              ? "flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10"
+              : "flex min-h-0 flex-1 flex-col"
           }
         >
           <div className="min-w-0">
-        <div className="mb-6 text-center lg:text-left">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <div className="mb-4 text-center sm:mb-6 lg:text-left">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
             Received a Document
           </h1>
-          <p className="mt-1 text-sm text-muted">Document Tracker</p>
+          <p className="mt-0.5 text-sm text-muted">Document Tracker</p>
         </div>
 
         {session && (
@@ -648,7 +649,7 @@ export function ReceivedDocumentCard() {
           </div>
 
         {selected && (
-          <div className="mt-6 min-w-0 lg:mt-0 lg:sticky lg:top-4 lg:[&_article]:max-w-none lg:[&_article]:w-full">
+          <div className="mt-4 min-w-0 sm:mt-6 lg:mt-0 lg:sticky lg:top-4 lg:[&_article]:max-w-none lg:[&_article]:w-full">
             <DocumentTrackingTimeline
               submission={submission}
               tracking={tracking}
@@ -705,7 +706,7 @@ export function ReceivedDocumentCard() {
           </div>
         )}
         </div>
-      </div>
+      </PageCard>
 
       <QrScannerModal
         open={scannerOpen}

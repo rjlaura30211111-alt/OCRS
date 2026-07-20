@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
+import { PageCard } from "@/components/PageCard";
 import type { BackupPreview } from "@/lib/database-backup";
 import { formatArchivedTimestamp } from "@/lib/datetime";
 import { isOcrsOffice } from "@/lib/office-permissions";
@@ -192,7 +193,7 @@ export function BackupRestoreCard() {
   }
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6 lg:p-8">
+    <PageCard>
       <div className="mb-6">
         <div className="mb-2 flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
@@ -316,6 +317,6 @@ export function BackupRestoreCard() {
           {success}
         </p>
       )}
-    </div>
+    </PageCard>
   );
 }
