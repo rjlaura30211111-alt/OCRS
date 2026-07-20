@@ -45,7 +45,7 @@ function ScanQrButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Scan QR code"
-      className="flex shrink-0 items-center justify-center rounded-lg bg-violet-600 px-3 py-2.5 text-white transition hover:bg-violet-700 sm:px-4"
+      className="flex h-[34px] shrink-0 items-center justify-center rounded-lg bg-violet-600 px-2.5 text-white transition hover:bg-violet-700"
     >
       <svg
         aria-hidden
@@ -66,7 +66,7 @@ function ScanQrButton({ onClick }: { onClick: () => void }) {
           d="M14.25 15.75h4.5M15.75 14.25v4.5"
         />
       </svg>
-      <span className="ml-2 hidden text-sm font-medium sm:inline">Scan QR</span>
+      <span className="ml-1.5 hidden text-xs font-medium sm:inline">Scan QR</span>
     </button>
   );
 }
@@ -438,25 +438,8 @@ export function TrackReportsCard() {
     <>
       <PageCard className="!py-2 sm:!py-3">
         <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 sm:p-3">
-          <div className="mb-2.5">
-            <label htmlFor="report-search" className={FORM_LABEL_CLASS}>
-              Search reports
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="report-search"
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Reference, subject, office..."
-                className={`min-w-0 flex-1 ${FORM_INPUT_CLASS} focus:border-violet-500 focus:ring-violet-500/20`}
-              />
-              <ScanQrButton onClick={() => setScannerOpen(true)} />
-            </div>
-          </div>
-
           <div className="grid gap-3 md:grid-cols-2 md:gap-4">
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <FilterToggleGroup
                 label="View by Date"
                 options={DATE_RANGE_OPTIONS}
@@ -466,7 +449,7 @@ export function TrackReportsCard() {
               />
 
               {datePreset === "custom" && (
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid max-w-md grid-cols-2 gap-2">
                   <div>
                     <label
                       htmlFor="custom-from"
@@ -500,25 +483,44 @@ export function TrackReportsCard() {
                 </div>
               )}
 
-              <div>
-                <label htmlFor="office-filter" className={FORM_LABEL_CLASS}>
-                  View by Office
-                </label>
-                <select
-                  id="office-filter"
-                  value={officeFilter}
-                  onChange={(event) =>
-                    setOfficeFilter(event.target.value as OfficeFilter)
-                  }
-                  className={`${FORM_INPUT_CLASS} w-full bg-white focus:border-violet-500 focus:ring-violet-500/20`}
-                >
-                  <option value="all">View all offices</option>
-                  {OFFICE_OPTIONS.map((office) => (
-                    <option key={office} value={office}>
-                      {office}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div className="w-full shrink-0 sm:w-36">
+                  <label htmlFor="office-filter" className={FORM_LABEL_CLASS}>
+                    View by Office
+                  </label>
+                  <select
+                    id="office-filter"
+                    value={officeFilter}
+                    onChange={(event) =>
+                      setOfficeFilter(event.target.value as OfficeFilter)
+                    }
+                    className={`${FORM_INPUT_CLASS} w-full bg-white focus:border-violet-500 focus:ring-violet-500/20`}
+                  >
+                    <option value="all">All offices</option>
+                    {OFFICE_OPTIONS.map((office) => (
+                      <option key={office} value={office}>
+                        {office}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="min-w-0 flex-1 sm:max-w-md">
+                  <label htmlFor="report-search" className={FORM_LABEL_CLASS}>
+                    Search reports
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="report-search"
+                      type="search"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Reference, subject..."
+                      className={`min-w-0 flex-1 ${FORM_INPUT_CLASS} focus:border-violet-500 focus:ring-violet-500/20`}
+                    />
+                    <ScanQrButton onClick={() => setScannerOpen(true)} />
+                  </div>
+                </div>
               </div>
             </div>
 
