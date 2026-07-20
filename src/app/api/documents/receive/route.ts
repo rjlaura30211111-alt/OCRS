@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  canUseReceiveDisposition,
   isValidReceiveDisposition,
 } from "@/lib/dispositions";
 import {
@@ -53,13 +52,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Invalid disposition." },
         { status: 400 }
-      );
-    }
-
-    if (!canUseReceiveDisposition(auth.office, status)) {
-      return NextResponse.json(
-        { error: "This disposition is only available to OCRS." },
-        { status: 403 }
       );
     }
 
