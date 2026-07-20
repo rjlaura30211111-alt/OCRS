@@ -1,17 +1,35 @@
-export const AUTO_COMPLETED_DISPOSITIONS = [
+export const LEGACY_AUTO_COMPLETED_DISPOSITIONS = [
   "Approved by CRS",
   "Noted By CRS",
   "Approved by RD",
   "Noted by RD",
 ] as const;
 
-export const RECEIVE_DISPOSITIONS = [
+export const AUTO_COMPLETED_DISPOSITIONS = [
+  "Signed by RD",
+  "Signed by CRS",
+  ...LEGACY_AUTO_COMPLETED_DISPOSITIONS,
+] as const;
+
+export const WORKFLOW_DISPOSITIONS = [
+  "Pull-out",
+  "Hand Carry",
+  "For Concur",
+  "HWI",
+] as const;
+
+const STANDARD_RECEIVE_DISPOSITIONS = [
   "For Checking",
   "Approved",
   "Return for Correction",
+] as const;
+
+export const RECEIVE_DISPOSITIONS = [
+  ...STANDARD_RECEIVE_DISPOSITIONS,
+  ...AUTO_COMPLETED_DISPOSITIONS,
+  ...WORKFLOW_DISPOSITIONS,
   "Uploaded to OLCIMS",
   "Approved-Completed",
-  ...AUTO_COMPLETED_DISPOSITIONS,
 ] as const;
 
 export type ReceiveDisposition = (typeof RECEIVE_DISPOSITIONS)[number];
@@ -28,23 +46,20 @@ export const COMPLETED_DISPOSITIONS = [
   ...AUTO_COMPLETED_DISPOSITIONS,
 ] as const;
 
-const STANDARD_RECEIVE_DISPOSITIONS: ReceiveDisposition[] = [
-  "For Checking",
-  "Approved",
-  "Return for Correction",
+const SHARED_RECEIVE_DISPOSITIONS: ReceiveDisposition[] = [
+  ...STANDARD_RECEIVE_DISPOSITIONS,
+  "Signed by RD",
+  "Signed by CRS",
+  ...WORKFLOW_DISPOSITIONS,
 ];
 
 export function getReceiveDispositionOptions(office: string): ReceiveDisposition[] {
   const trimmed = office.trim();
   if (trimmed === "OCRS") {
-    return [
-      ...STANDARD_RECEIVE_DISPOSITIONS,
-      ...AUTO_COMPLETED_DISPOSITIONS,
-      "Uploaded to OLCIMS",
-      "Approved-Completed",
-    ];
+    return [...SHARED_RECEIVE_DISPOSITIONS, "Uploaded to OLCIMS"];
   }
-  return [...STANDARD_RECEIVE_DISPOSITIONS, ...AUTO_COMPLETED_DISPOSITIONS];
+
+  return [...SHARED_RECEIVE_DISPOSITIONS];
 }
 
 export function canUseReceiveDisposition(
@@ -73,11 +88,6 @@ export function formatDispositionLabel(status: string): string {
       return "Uploaded to OLCIMS";
     case "Approved-Completed":
       return "Approved-Completed";
-    case "Approved by CRS":
-    case "Noted By CRS":
-    case "Approved by RD":
-    case "Noted by RD":
-      return status;
     default:
       return status;
   }

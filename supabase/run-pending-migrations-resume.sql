@@ -113,3 +113,28 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_office_access_tokens_token_unique
 INSERT INTO office_access_tokens (office_code, access_token)
 VALUES ('ORPRMD-DLOS', 'rprmddlos_88a3795a322f0d2392c4dabeadb5d500be07809a065b6995')
 ON CONFLICT (access_token) DO NOTHING;
+
+-- 4) Disposition options (Signed by RD/CRS, Pull-out, Hand Carry, For Concur, HWI, OLCIMS)
+ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_status_check;
+
+ALTER TABLE documents ADD CONSTRAINT documents_status_check CHECK (
+  status IN (
+    'Pending',
+    'For Checking',
+    'Approved',
+    'Return for Correction',
+    'Signed by RD',
+    'Signed by CRS',
+    'Pull-out',
+    'Hand Carry',
+    'For Concur',
+    'HWI',
+    'Uploaded to OLCIMS',
+    'Approved-Completed',
+    'Approved by CRS',
+    'Noted By CRS',
+    'Approved by RD',
+    'Noted by RD',
+    'Uploaded at OLCIMS'
+  )
+);

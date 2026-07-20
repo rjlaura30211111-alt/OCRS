@@ -19,7 +19,7 @@ function rethrowDbError(
 
   if (/documents_status_check/i.test(message)) {
     throw new Error(
-      "This disposition could not be saved because the database status list is outdated. Run supabase/migrations/20260713190000_ocrs_completed_dispositions.sql in the Supabase SQL Editor, then try again."
+      "This disposition could not be saved because the database status list is outdated. Run supabase/migrations/20260720110000_add_disposition_options.sql in the Supabase SQL Editor, then try again."
     );
   }
 
@@ -49,6 +49,12 @@ export const DOCUMENT_STATUSES = [
   "For Checking",
   "Approved",
   "Return for Correction",
+  "Signed by RD",
+  "Signed by CRS",
+  "Pull-out",
+  "Hand Carry",
+  "For Concur",
+  "HWI",
   "Uploaded to OLCIMS",
   "Approved-Completed",
   "Approved by CRS",
