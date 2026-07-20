@@ -39,25 +39,6 @@ type ReportRow = ReportSummary & {
   pendingDeletion?: boolean;
 };
 
-function TrackIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.75}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"
-      />
-    </svg>
-  );
-}
-
 function ScanQrButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -455,33 +436,10 @@ export function TrackReportsCard() {
 
   return (
     <>
-      <PageCard>
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-md">
-                <TrackIcon />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                  Track my Reports
-                </h1>
-                <p className="text-sm text-muted">Document Tracker</p>
-                {session && (
-                  <p className="mt-1 text-xs font-medium text-emerald-800">
-                    {isOcrsOffice(session.office)
-                      ? officeFilter === "all"
-                        ? "Showing all offices"
-                        : `Showing ${officeFilter} documents`
-                      : `Showing ${session.office} documents only`}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full sm:max-w-xs">
-            <label htmlFor="report-search" className="mb-1.5 block text-sm font-medium">
+      <PageCard className="!py-2 sm:!py-3">
+        <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 sm:p-3">
+          <div className="mb-2.5">
+            <label htmlFor="report-search" className={FORM_LABEL_CLASS}>
               Search reports
             </label>
             <div className="flex gap-2">
@@ -491,78 +449,88 @@ export function TrackReportsCard() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Reference, subject, office..."
-                className="min-w-0 flex-1 rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+                className={`min-w-0 flex-1 ${FORM_INPUT_CLASS} focus:border-violet-500 focus:ring-violet-500/20`}
               />
               <ScanQrButton onClick={() => setScannerOpen(true)} />
             </div>
           </div>
-        </div>
 
-        <div className="mb-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-          <FilterToggleGroup
-            label="View by Date"
-            options={DATE_RANGE_OPTIONS}
-            value={datePreset}
-            onChange={setDatePreset}
-            activeClassName="bg-[#1a3f6f] text-white shadow-sm"
-          />
+          <div className="grid gap-3 md:grid-cols-2 md:gap-4">
+            <div className="space-y-2.5">
+              <FilterToggleGroup
+                label="View by Date"
+                options={DATE_RANGE_OPTIONS}
+                value={datePreset}
+                onChange={setDatePreset}
+                activeClassName="bg-[#1a3f6f] text-white shadow-sm"
+              />
 
-          {datePreset === "custom" && (
-            <div className="grid gap-3 sm:grid-cols-2">
+              {datePreset === "custom" && (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="custom-from"
+                      className="mb-1 block text-xs font-medium text-slate-700"
+                    >
+                      From
+                    </label>
+                    <input
+                      id="custom-from"
+                      type="date"
+                      value={customFrom}
+                      onChange={(e) => setCustomFrom(e.target.value)}
+                      className={`${FORM_INPUT_CLASS} bg-white focus:border-violet-500 focus:ring-violet-500/20`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="custom-to"
+                      className="mb-1 block text-xs font-medium text-slate-700"
+                    >
+                      To
+                    </label>
+                    <input
+                      id="custom-to"
+                      type="date"
+                      value={customTo}
+                      onChange={(e) => setCustomTo(e.target.value)}
+                      className={`${FORM_INPUT_CLASS} bg-white focus:border-violet-500 focus:ring-violet-500/20`}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
-                <label htmlFor="custom-from" className="mb-1.5 block text-xs font-medium text-slate-700">
-                  From
+                <label htmlFor="office-filter" className={FORM_LABEL_CLASS}>
+                  View by Office
                 </label>
-                <input
-                  id="custom-from"
-                  type="date"
-                  value={customFrom}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-                />
-              </div>
-              <div>
-                <label htmlFor="custom-to" className="mb-1.5 block text-xs font-medium text-slate-700">
-                  To
-                </label>
-                <input
-                  id="custom-to"
-                  type="date"
-                  value={customTo}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-                />
+                <select
+                  id="office-filter"
+                  value={officeFilter}
+                  onChange={(event) =>
+                    setOfficeFilter(event.target.value as OfficeFilter)
+                  }
+                  className={`${FORM_INPUT_CLASS} w-full bg-white focus:border-violet-500 focus:ring-violet-500/20`}
+                >
+                  <option value="all">View all offices</option>
+                  {OFFICE_OPTIONS.map((office) => (
+                    <option key={office} value={office}>
+                      {office}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-          )}
 
-          <FilterToggleGroup
-            label="View by Status"
-            options={TRACKING_PHASE_OPTIONS}
-            value={phaseFilter}
-            onChange={setPhaseFilter}
-            activeClassName="bg-violet-600 text-white shadow-sm"
-          />
-
-          <div>
-            <label htmlFor="office-filter" className={FORM_LABEL_CLASS}>
-              View by Office
-            </label>
-            <select
-              id="office-filter"
-              value={officeFilter}
-              onChange={(event) =>
-                setOfficeFilter(event.target.value as OfficeFilter)
-              }
-              className={`${FORM_INPUT_CLASS} max-w-md bg-white focus:border-violet-500 focus:ring-violet-500/20`}
-            >
-              <option value="all">View all offices</option>
-              {OFFICE_OPTIONS.map((office) => (
-                <option key={office} value={office}>
-                  {office}
-                </option>
-              ))}
-            </select>
+            <div>
+              <FilterToggleGroup
+                label="View by Status"
+                options={TRACKING_PHASE_OPTIONS}
+                value={phaseFilter}
+                onChange={setPhaseFilter}
+                activeClassName="bg-violet-600 text-white shadow-sm"
+              />
+            </div>
           </div>
         </div>
 
@@ -592,7 +560,7 @@ export function TrackReportsCard() {
 
         {!loading && !error && filtered.length > 0 && (
           <>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
+            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">
               {filtered.length} report{filtered.length === 1 ? "" : "s"}
               {reports.length !== filtered.length
                 ? ` of ${reports.length}`
