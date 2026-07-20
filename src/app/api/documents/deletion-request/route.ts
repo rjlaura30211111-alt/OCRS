@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createDeletionRequest } from "@/lib/deletion-requests";
 import {
-  archiveDocumentByReference,
   getDocumentByReference,
+  getDocumentSubmitOffice,
 } from "@/lib/documents";
 import {
   isOfficeAuthContext,
-  requireOcrsOffice,
   requireOfficeAuth,
 } from "@/lib/office-auth";
+import { isOcrsOffice } from "@/lib/office-permissions";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -29,29 +30,19 @@ export async function POST(request: NextRequest) {
       return auth;
     }
 
-    const ocrsError = requireOcrsOffice(auth);
-    if (ocrsError) {
-      return ocrsError;
+    if (isOcrsOffice(auth.office)) {
+      return NextResponse.json(
+        { error: "OCRS approves deletion requests from the Request for Deletion page." },
+        { status: 403 }
+      );
     }
 
-    const body = (await request.json()) as {
-      referenceNumber?: string;
-      deletedBy?: string;
-    };
-
+    const body = (await request.json()) as { referenceNumber?: string };
     const referenceNumber = body.referenceNumber?.trim();
-    const deletedBy = body.deletedBy?.trim() ?? "";
 
     if (!referenceNumber) {
       return NextResponse.json(
         { error: "Reference number is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!deletedBy) {
-      return NextResponse.json(
-        { error: "Deleted by is required." },
         { status: 400 }
       );
     }
@@ -62,15 +53,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No Document Found" }, { status: 404 });
     }
 
-    await archiveDocumentByReference(referenceNumber, auth.office, {
-      deletedByName: deletedBy,
-    });
+    const submitOffice = await getDocumentSubmitOffice(
+      document.id,
+      document.currentOffice
+    );
 
-    return NextResponse.json({ ok: true, referenceNumber });
+    if (submitOffice.trim() !== auth.office.trim()) {
+      return NextResponse.json(
+        { error: "You can only request deletion for reports submitted by your office." },
+        { status: 403 }
+      );
+    }
+
+    const created = await createDeletionRequest(referenceNumber, auth.office);
+
+    return NextResponse.json({
+      ok: true,
+      referenceNumber: created.referenceNumber,
+      message: "Deletion request sent to OCRS for approval.",
+    });
   } catch (error) {
-    console.error("document archive error:", error);
+    console.error("deletion request create error:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to archive document.";
+      error instanceof Error ? error.message : "Failed to submit deletion request.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

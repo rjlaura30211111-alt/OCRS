@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ConfirmArchiveModal } from "@/components/ConfirmArchiveModal";
+import { OcrsDeleteModal, type OcrsDeleteEntryInfo } from "@/components/OcrsDeleteModal";
+import { RequestDeletionModal } from "@/components/RequestDeletionModal";
 import { QrScannerModal } from "@/components/QrScannerModal";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import {
@@ -29,6 +30,7 @@ type ReportRow = ReportSummary & {
   trackingPhase: TrackingPhase;
   createdAt: string;
   updatedAt: string;
+  pendingDeletion?: boolean;
 };
 
 function TrackIcon({ className = "h-5 w-5" }: { className?: string }) {
@@ -144,6 +146,14 @@ function DispositionPill({ disposition }: { disposition: string }) {
   );
 }
 
+function PendingDeletionPill() {
+  return (
+    <span className="inline-flex rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-700 ring-1 ring-red-200">
+      Deletion Pending
+    </span>
+  );
+}
+
 function TrackingPhasePill({ phase }: { phase: TrackingPhase }) {
   const label = formatTrackingPhaseLabel(phase);
   const tone =
@@ -196,8 +206,8 @@ export function TrackReportsCard() {
     row: ReportRow;
   } | null>(null);
   const [highlightedRef, setHighlightedRef] = useState<string | null>(null);
-  const [archiveTarget, setArchiveTarget] = useState<ReportRow | null>(null);
-  const [archiving, setArchiving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ReportRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
@@ -269,6 +279,15 @@ export function TrackReportsCard() {
         return;
       }
 
+      const isOcrs = isOcrsOffice(session.office);
+      const canRequest =
+        !isOcrs && row.office === session.office && !row.pendingDeletion;
+      const canDelete = isOcrs;
+
+      if (!canRequest && !canDelete) {
+        return;
+      }
+
       event.preventDefault();
       setHighlightedRef(row.referenceNumber);
       setContextMenu({
@@ -280,45 +299,91 @@ export function TrackReportsCard() {
     [session]
   );
 
-  const handleArchiveConfirm = useCallback(async () => {
-    if (!archiveTarget || !session) {
+  const handleDeletionRequestConfirm = useCallback(async () => {
+    if (!deleteTarget || !session) {
       return;
     }
 
-    setArchiving(true);
+    setDeleting(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/documents/archive", {
+      const response = await fetch("/api/documents/deletion-request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...officeAuthHeaders(session.token),
         },
         body: JSON.stringify({
-          referenceNumber: archiveTarget.referenceNumber,
+          referenceNumber: deleteTarget.referenceNumber,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete report.");
+        throw new Error(data.error ?? "Failed to submit deletion request.");
       }
 
-      setArchiveTarget(null);
+      setDeleteTarget(null);
       setHighlightedRef(null);
       setContextMenu(null);
-      if (selected?.referenceNumber === archiveTarget.referenceNumber) {
+      if (selected?.referenceNumber === deleteTarget.referenceNumber) {
         setSelected(null);
       }
       await loadReports();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete report.");
+      setError(
+        err instanceof Error ? err.message : "Failed to submit deletion request."
+      );
     } finally {
-      setArchiving(false);
+      setDeleting(false);
     }
-  }, [archiveTarget, loadReports, selected, session]);
+  }, [deleteTarget, loadReports, selected, session]);
+
+  const handleOcrsDeleteConfirm = useCallback(
+    async (deletedBy: string) => {
+      if (!deleteTarget || !session) {
+        return;
+      }
+
+      setDeleting(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/documents/archive", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...officeAuthHeaders(session.token),
+          },
+          body: JSON.stringify({
+            referenceNumber: deleteTarget.referenceNumber,
+            deletedBy,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "Failed to delete report.");
+        }
+
+        setDeleteTarget(null);
+        setHighlightedRef(null);
+        setContextMenu(null);
+        if (selected?.referenceNumber === deleteTarget.referenceNumber) {
+          setSelected(null);
+        }
+        await loadReports();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to delete report.");
+      } finally {
+        setDeleting(false);
+      }
+    },
+    [deleteTarget, loadReports, selected, session]
+  );
 
   const handleScan = useCallback(
     (value: string) => {
@@ -555,7 +620,10 @@ export function TrackReportsCard() {
                       onContextMenu={(event) => openRowContextMenu(event, row)}
                     >
                       <td className="whitespace-nowrap px-4 py-3 font-mono text-sm font-semibold text-[#1a3f6f]">
-                        {row.referenceNumber}
+                        <div className="flex flex-col gap-1">
+                          <span>{row.referenceNumber}</span>
+                          {row.pendingDeletion && <PendingDeletionPill />}
+                        </div>
                       </td>
                       <td className="max-w-[220px] truncate px-4 py-3 text-sm text-slate-800">
                         {row.subject}
@@ -595,9 +663,16 @@ export function TrackReportsCard() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-mono text-sm font-bold text-[#1a3f6f]">
-                      {row.referenceNumber}
-                    </p>
+                    <div>
+                      <p className="font-mono text-sm font-bold text-[#1a3f6f]">
+                        {row.referenceNumber}
+                      </p>
+                      {row.pendingDeletion && (
+                        <div className="mt-1">
+                          <PendingDeletionPill />
+                        </div>
+                      )}
+                    </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       <TrackingPhasePill phase={row.trackingPhase} />
                       <DispositionPill disposition={row.status} />
@@ -644,7 +719,7 @@ export function TrackReportsCard() {
             role="menuitem"
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50"
             onClick={() => {
-              setArchiveTarget(contextMenu.row);
+              setDeleteTarget(contextMenu.row);
               setContextMenu(null);
             }}
           >
@@ -662,23 +737,49 @@ export function TrackReportsCard() {
                 d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
               />
             </svg>
-            Delete
+            {session && isOcrsOffice(session.office)
+              ? "Delete"
+              : "Request Deletion"}
           </button>
         </div>
       )}
 
-      <ConfirmArchiveModal
-        open={archiveTarget !== null}
-        referenceNumber={archiveTarget?.referenceNumber ?? ""}
-        subject={archiveTarget?.subject ?? ""}
-        archiving={archiving}
-        onConfirm={() => void handleArchiveConfirm()}
-        onCancel={() => {
-          if (!archiving) {
-            setArchiveTarget(null);
+      {session && isOcrsOffice(session.office) ? (
+        <OcrsDeleteModal
+          open={deleteTarget !== null}
+          entry={
+            deleteTarget
+              ? ({
+                  referenceNumber: deleteTarget.referenceNumber,
+                  subject: deleteTarget.subject,
+                  drafter: deleteTarget.drafter,
+                  currentOffice: deleteTarget.currentTrack,
+                  documentStatus: deleteTarget.status,
+                } satisfies OcrsDeleteEntryInfo)
+              : null
           }
-        }}
-      />
+          deleting={deleting}
+          onConfirm={(deletedBy) => void handleOcrsDeleteConfirm(deletedBy)}
+          onCancel={() => {
+            if (!deleting) {
+              setDeleteTarget(null);
+            }
+          }}
+        />
+      ) : (
+        <RequestDeletionModal
+          open={deleteTarget !== null}
+          referenceNumber={deleteTarget?.referenceNumber ?? ""}
+          subject={deleteTarget?.subject ?? ""}
+          submitting={deleting}
+          onConfirm={() => void handleDeletionRequestConfirm()}
+          onCancel={() => {
+            if (!deleting) {
+              setDeleteTarget(null);
+            }
+          }}
+        />
+      )}
 
       <TrackingDetailModal report={selected} onClose={() => setSelected(null)} />
 

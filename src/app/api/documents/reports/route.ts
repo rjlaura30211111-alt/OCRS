@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getPendingDeletionReferenceNumbers } from "@/lib/deletion-requests";
 import { listDocumentReports, toReportPayload } from "@/lib/documents";
 import { optionalOfficeAuth } from "@/lib/office-auth";
 import { matchesOfficeReportScope } from "@/lib/report-scope";
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest) {
 
     const auth = await optionalOfficeAuth(request);
     let documents = await listDocumentReports(limit);
+    const pendingDeletionRefs = await getPendingDeletionReferenceNumbers().catch(
+      () => new Set<string>()
+    );
 
     if (auth) {
       documents = documents.filter((document) =>
@@ -36,7 +40,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       count: documents.length,
-      results: documents.map(toReportPayload),
+      results: documents.map((document) => ({
+        ...toReportPayload(document),
+        pendingDeletion: pendingDeletionRefs.has(document.referenceNumber),
+      })),
       scopedOffice: auth?.office ?? null,
     });
   } catch (error) {

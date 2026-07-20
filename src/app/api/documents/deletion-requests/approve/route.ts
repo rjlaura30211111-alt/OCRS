@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  archiveDocumentByReference,
-  getDocumentByReference,
-} from "@/lib/documents";
+import { approveDeletionRequest } from "@/lib/deletion-requests";
 import {
   isOfficeAuthContext,
   requireOcrsOffice,
@@ -35,16 +32,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = (await request.json()) as {
-      referenceNumber?: string;
+      requestId?: string;
       deletedBy?: string;
     };
 
-    const referenceNumber = body.referenceNumber?.trim();
+    const requestId = body.requestId?.trim();
     const deletedBy = body.deletedBy?.trim() ?? "";
 
-    if (!referenceNumber) {
+    if (!requestId) {
       return NextResponse.json(
-        { error: "Reference number is required." },
+        { error: "Deletion request id is required." },
         { status: 400 }
       );
     }
@@ -56,21 +53,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const document = await getDocumentByReference(referenceNumber);
+    await approveDeletionRequest(requestId, deletedBy, auth.office);
 
-    if (!document) {
-      return NextResponse.json({ error: "No Document Found" }, { status: 404 });
-    }
-
-    await archiveDocumentByReference(referenceNumber, auth.office, {
-      deletedByName: deletedBy,
-    });
-
-    return NextResponse.json({ ok: true, referenceNumber });
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("document archive error:", error);
+    console.error("deletion request approve error:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to archive document.";
+      error instanceof Error ? error.message : "Failed to approve deletion.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

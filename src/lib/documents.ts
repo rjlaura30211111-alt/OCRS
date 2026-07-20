@@ -593,7 +593,11 @@ export function getDisplayStatus(status: DocumentStatus): string {
 
 export async function archiveDocumentByReference(
   referenceNumber: string,
-  archivedByOffice: string
+  archivedByOffice: string,
+  options?: {
+    deletedByName?: string;
+    requestedByOffice?: string;
+  }
 ): Promise<void> {
   const document = await getDocumentByReference(referenceNumber);
 
@@ -630,6 +634,8 @@ export async function archiveDocumentByReference(
       document_created_at: document.createdAt,
       document_updated_at: document.updatedAt,
       archived_by_office: archivedByOffice.trim(),
+      deleted_by_name: options?.deletedByName?.trim() || null,
+      requested_by_office: options?.requestedByOffice?.trim() || null,
     })
     .select("id")
     .single();
@@ -675,6 +681,17 @@ export async function archiveDocumentByReference(
   if (deleteDocError) {
     rethrowDbError(deleteDocError);
   }
+
+  await supabase
+    .from("deletion_requests")
+    .update({
+      request_status: "approved",
+      resolved_at: new Date().toISOString(),
+      deleted_by_name: options?.deletedByName?.trim() || null,
+      resolved_by_office: archivedByOffice.trim(),
+    })
+    .eq("document_id", document.id)
+    .eq("request_status", "pending");
 }
 
 export async function getDocumentSubmitOffice(
@@ -714,6 +731,8 @@ type ArchivedDocumentRow = {
   document_updated_at: string;
   archived_at: string;
   archived_by_office: string;
+  deleted_by_name: string | null;
+  requested_by_office: string | null;
 };
 
 type ArchivedRoutingLogRow = {
@@ -744,6 +763,8 @@ export type ArchivedDocumentRecord = {
   documentUpdatedAt: string;
   archivedAt: string;
   archivedByOffice: string;
+  deletedByName: string | null;
+  requestedByOffice: string | null;
 };
 
 export type ArchivedReportRecord = ArchivedDocumentRecord & {
@@ -768,6 +789,8 @@ function mapArchivedRow(row: ArchivedDocumentRow): ArchivedDocumentRecord {
     documentUpdatedAt: row.document_updated_at,
     archivedAt: row.archived_at,
     archivedByOffice: row.archived_by_office,
+    deletedByName: row.deleted_by_name,
+    requestedByOffice: row.requested_by_office,
   };
 }
 
@@ -896,5 +919,7 @@ export function toArchivedReportPayload(document: ArchivedReportRecord) {
     updatedAt: document.documentUpdatedAt,
     archivedAt: document.archivedAt,
     archivedByOffice: document.archivedByOffice,
+    deletedByName: document.deletedByName,
+    requestedByOffice: document.requestedByOffice,
   };
 }

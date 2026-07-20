@@ -88,7 +88,45 @@ function ChevronIcon() {
   );
 }
 
-const menuItems = [
+function ArchiveMenuIcon({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.75}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25v3.75M14 11.25v3.75M5.25 7.5h13.5M9.75 7.5V5.625A1.125 1.125 0 0 1 10.875 4.5h2.25A1.125 1.125 0 0 1 14.25 5.625V7.5"
+      />
+    </svg>
+  );
+}
+
+function DeletionRequestIcon({ className = "h-7 w-7" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.75}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+      />
+    </svg>
+  );
+}
+
+const baseMenuItems = [
   {
     href: "/submit",
     title: "Submit Report",
@@ -127,12 +165,41 @@ const menuItems = [
   },
 ] as const;
 
+const ocrsMenuItems = [
+  {
+    href: "/deletion-requests",
+    title: "Request for Deletion",
+    description: "Review office deletion requests and approve before archiving.",
+    action: "Review queue",
+    icon: DeletionRequestIcon,
+    accent: "from-red-500 to-red-600",
+    iconBg:
+      "bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white",
+    ring: "group-hover:ring-red-200",
+    requiresToken: true,
+  },
+  {
+    href: "/archive",
+    title: "Archive",
+    description: "View deleted reports with copied information and audit details.",
+    action: "Open archive",
+    icon: ArchiveMenuIcon,
+    accent: "from-rose-500 to-rose-600",
+    iconBg:
+      "bg-rose-50 text-rose-600 group-hover:bg-rose-600 group-hover:text-white",
+    ring: "group-hover:ring-rose-200",
+    requiresToken: true,
+  },
+] as const;
+
+type MenuItem = (typeof baseMenuItems)[number] | (typeof ocrsMenuItems)[number];
+
 function MenuCard({
   item,
   disabled,
   onDisabledClick,
 }: {
-  item: (typeof menuItems)[number];
+  item: MenuItem;
   disabled: boolean;
   onDisabledClick: () => void;
 }) {
@@ -216,6 +283,11 @@ function MenuCard({
 
 export function HomeLanding() {
   const { session, openModal } = useOfficeSession();
+  const menuItems: MenuItem[] =
+    session?.office === "OCRS"
+      ? [...baseMenuItems, ...ocrsMenuItems]
+      : [...baseMenuItems];
+
   return (
     <main className="relative h-full min-h-0 overflow-y-auto page-scroll">
       <div
@@ -255,7 +327,7 @@ export function HomeLanding() {
 
           <HomeStatusSummary />
 
-          <div className="grid min-h-0 flex-1 grid-rows-3 gap-1.5 sm:mt-8 sm:flex-none sm:grid-cols-2 sm:grid-rows-none sm:gap-5 lg:grid-cols-3">
+          <div className="grid min-h-0 flex-1 auto-rows-min gap-1.5 sm:mt-8 sm:flex-none sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
             {menuItems.map((item) => (
               <MenuCard
                 key={item.href}

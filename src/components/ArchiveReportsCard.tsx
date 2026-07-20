@@ -20,6 +20,8 @@ type ArchivedReportRow = ReportSummary & {
   trackingPhase: TrackingPhase;
   archivedAt: string;
   archivedByOffice: string;
+  deletedByName: string | null;
+  requestedByOffice: string | null;
 };
 
 function ArchiveIcon({ className = "h-5 w-5" }: { className?: string }) {
@@ -242,7 +244,7 @@ export function ArchiveReportsCard() {
             <p className="mt-1 text-sm text-muted">
               {query.trim()
                 ? "Try a different search term."
-                : "Reports deleted from Track my Reports will appear here."}
+                : "Reports approved for deletion by OCRS appear here."}
             </p>
           </div>
         )}
@@ -263,8 +265,9 @@ export function ArchiveReportsCard() {
                         "Reference Number",
                         "Subject",
                         "Office",
-                        "Archived At",
-                        "Archived By",
+                        "Time Deleted",
+                        "Deleted By",
+                        "Requested By",
                         "Disposition",
                         "Status",
                       ] as const
@@ -301,7 +304,10 @@ export function ArchiveReportsCard() {
                         {formatArchivedTimestamp(row.archivedAt)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-red-800">
-                        {row.archivedByOffice}
+                        {row.deletedByName ?? row.archivedByOffice}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                        {row.requestedByOffice ?? "—"}
                       </td>
                       <td className="px-4 py-3">
                         <DispositionPill disposition={row.status} />
@@ -341,13 +347,17 @@ export function ArchiveReportsCard() {
                       {row.office}
                     </div>
                     <div>
-                      <span className="font-semibold text-slate-600">Archived by:</span>{" "}
+                      <span className="font-semibold text-slate-600">Deleted by:</span>{" "}
                       <span className="font-semibold text-red-800">
-                        {row.archivedByOffice}
+                        {row.deletedByName ?? row.archivedByOffice}
                       </span>
                     </div>
+                    <div>
+                      <span className="font-semibold text-slate-600">Requested by:</span>{" "}
+                      {row.requestedByOffice ?? "—"}
+                    </div>
                     <div className="col-span-2">
-                      <span className="font-semibold text-slate-600">Archived at:</span>{" "}
+                      <span className="font-semibold text-slate-600">Time deleted:</span>{" "}
                       {formatArchivedTimestamp(row.archivedAt)}
                     </div>
                   </div>
