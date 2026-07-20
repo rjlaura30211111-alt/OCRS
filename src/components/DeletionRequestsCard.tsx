@@ -158,14 +158,14 @@ export function DeletionRequestsCard() {
   return (
     <>
       <PageCard>
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
                 <TrashRequestIcon />
               </span>
               <div>
-                <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
                   Request for Deletion
                 </h1>
                 <p className="text-sm text-muted">

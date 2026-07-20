@@ -29,6 +29,13 @@ import {
 } from "@/components/OfficeInbox";
 import { QrScannerModal } from "@/components/QrScannerModal";
 import { PageCard } from "@/components/PageCard";
+import {
+  FORM_BUTTON_CLASS,
+  FORM_INPUT_CLASS,
+  FORM_LABEL_CLASS,
+  PAGE_HEADING_CLASS,
+  PAGE_SUBHEADING_CLASS,
+} from "@/lib/layout-widths";
 
 export type DocumentLookup = {
   referenceNumber: string;
@@ -171,22 +178,22 @@ function ReceiveForm({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-emerald-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Receive & Disposition</h2>
+    <div className="mt-3 rounded-xl border border-emerald-200 bg-white p-3">
+      <h2 className="text-xs font-semibold text-slate-900 sm:text-sm">Receive & Disposition</h2>
 
-      <div className="mt-3 space-y-3">
+      <div className="mt-2 space-y-2.5">
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Office</label>
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <p className="text-base font-bold text-emerald-900">{sessionOffice}</p>
-            <p className="mt-0.5 text-xs text-emerald-800">
+          <label className={FORM_LABEL_CLASS}>Office</label>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+            <p className="text-sm font-bold text-emerald-900">{sessionOffice}</p>
+            <p className="text-[11px] text-emerald-800">
               Auto-set from your office access token.
             </p>
           </div>
         </div>
 
         <div>
-          <label htmlFor="received-by" className="mb-1.5 block text-sm font-medium">
+          <label htmlFor="received-by" className={FORM_LABEL_CLASS}>
             Received by
           </label>
           <input
@@ -195,12 +202,12 @@ function ReceiveForm({
             value={receivedBy}
             onChange={(e) => setReceivedBy(e.target.value)}
             placeholder="Name of receiver"
-            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className={`${FORM_INPUT_CLASS} focus:border-emerald-500 focus:ring-emerald-500/20`}
           />
         </div>
 
         <div>
-          <label htmlFor="disposition" className="mb-1.5 block text-sm font-medium">
+          <label htmlFor="disposition" className={FORM_LABEL_CLASS}>
             Disposition
           </label>
           <select
@@ -209,7 +216,7 @@ function ReceiveForm({
             onChange={(e) =>
               setDisposition(e.target.value as ReceiveDisposition)
             }
-            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className={`${FORM_INPUT_CLASS} focus:border-emerald-500 focus:ring-emerald-500/20`}
           >
             {dispositionOptions.map((option) => (
               <option key={option} value={option}>
@@ -219,28 +226,28 @@ function ReceiveForm({
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Date Received</label>
+            <label className={FORM_LABEL_CLASS}>Date Received</label>
             <input
               type="text"
               readOnly
               value={liveTime.ready ? formatDisplayDate(liveTime.date) : "—"}
-              className="w-full rounded-lg border border-border bg-slate-50 px-4 py-3 text-sm text-muted"
+              className="w-full rounded-lg border border-border bg-slate-50 px-3 py-2 text-sm text-muted"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Time Received</label>
+            <label className={FORM_LABEL_CLASS}>Time Received</label>
             <input
               type="text"
               readOnly
               value={liveTime.ready ? formatDisplayTime(liveTime.time) : "—"}
-              className="w-full rounded-lg border border-border bg-slate-50 px-4 py-3 text-sm text-muted"
+              className="w-full rounded-lg border border-border bg-slate-50 px-3 py-2 text-sm text-muted"
             />
           </div>
         </div>
 
-        <p className="text-xs text-muted">
+        <p className="text-[11px] text-muted">
           Timestamp is recorded automatically when you save.
         </p>
 
@@ -248,7 +255,7 @@ function ReceiveForm({
           type="button"
           onClick={handleSubmit}
           disabled={saving}
-          className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`${FORM_BUTTON_CLASS} bg-emerald-600 hover:bg-emerald-700`}
         >
           {saving ? "Saving..." : "Save Receipt"}
         </button>
@@ -286,7 +293,7 @@ function ScanQrButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Scan QR code"
-      className="flex shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-3 py-3 text-white transition hover:bg-emerald-700 sm:px-4"
+      className="flex shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-2.5 py-2 text-white transition hover:bg-emerald-700 sm:px-3"
     >
       <svg
         aria-hidden
@@ -566,20 +573,18 @@ export function ReceivedDocumentCard() {
 
   return (
     <>
-      <PageCard className="lg:p-10">
+      <PageCard>
         <div
           className={
             selected
-              ? "flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10"
-              : "flex min-h-0 flex-1 flex-col"
+              ? "flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 xl:gap-6"
+              : undefined
           }
         >
           <div className="min-w-0">
-        <div className="mb-4 text-center sm:mb-6 lg:text-left">
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
-            Received a Document
-          </h1>
-          <p className="mt-0.5 text-sm text-muted">Document Tracker</p>
+        <div className="mb-3 text-center lg:text-left">
+          <h1 className={PAGE_HEADING_CLASS}>Received a Document</h1>
+          <p className={PAGE_SUBHEADING_CLASS}>Document Tracker</p>
         </div>
 
         {session && (
@@ -592,7 +597,7 @@ export function ReceivedDocumentCard() {
           />
         )}
 
-        <label htmlFor="reference-search" className="mb-2 block text-sm font-medium">
+        <label htmlFor="reference-search" className={FORM_LABEL_CLASS}>
           Enter Reference Number
         </label>
 
@@ -605,7 +610,7 @@ export function ReceivedDocumentCard() {
             onFocus={() => setShowSuggestions(true)}
             placeholder="Search reference number..."
             autoComplete="off"
-            className="min-w-0 flex-1 rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className={`min-w-0 flex-1 ${FORM_INPUT_CLASS} focus:border-emerald-500 focus:ring-emerald-500/20`}
           />
           <ScanQrButton onClick={() => setScannerOpen(true)} />
         </div>
@@ -649,7 +654,7 @@ export function ReceivedDocumentCard() {
           </div>
 
         {selected && (
-          <div className="mt-4 min-w-0 sm:mt-6 lg:mt-0 lg:sticky lg:top-4 lg:[&_article]:max-w-none lg:[&_article]:w-full">
+          <div className="mt-3 min-w-0 lg:mt-0 lg:sticky lg:top-3 lg:[&_article]:max-w-none lg:[&_article]:w-full">
             <DocumentTrackingTimeline
               submission={submission}
               tracking={tracking}

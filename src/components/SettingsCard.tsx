@@ -61,13 +61,13 @@ export function SettingsCard() {
 
   return (
     <PageCard>
-      <div className="mb-6">
+      <div className="mb-3">
         <div className="mb-2 flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
             <SettingsIcon />
           </span>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
+            <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Settings</h1>
             <p className="text-sm text-muted">OCRS administration and device preferences</p>
           </div>
         </div>

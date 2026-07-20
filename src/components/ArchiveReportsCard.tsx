@@ -152,14 +152,14 @@ export function ArchiveReportsCard() {
   return (
     <>
       <PageCard>
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-700 to-red-600 text-white shadow-md">
                 <ArchiveIcon />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
                   Archived Reports
                 </h1>
                 <p className="text-sm text-muted">OCRS · Document Tracker</p>

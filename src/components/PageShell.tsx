@@ -26,13 +26,13 @@ export function PageShell({
 
     return (
       <main className="flex h-full min-h-0 flex-col overflow-y-auto page-scroll">
-        <div className={`mx-auto flex min-h-full w-full flex-col ${widthClass}`}>
+        <div className={`mx-auto flex w-full flex-col ${widthClass}`}>
           {showBack && (
-            <div className="shrink-0 px-3 pt-2 sm:px-0 sm:pt-3">
+            <div className="shrink-0 px-3 pt-1.5 sm:px-0 sm:pt-2">
               <BackToHomePill />
             </div>
           )}
-          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+          <div className="flex flex-col pb-2 sm:pb-3">{children}</div>
         </div>
       </main>
     );

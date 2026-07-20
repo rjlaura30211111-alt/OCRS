@@ -194,13 +194,13 @@ export function BackupRestoreCard() {
 
   return (
     <PageCard>
-      <div className="mb-6">
+      <div className="mb-3">
         <div className="mb-2 flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
             <DatabaseIcon />
           </span>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+            <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
               Backup &amp; Restore Database
             </h1>
             <p className="text-sm text-muted">

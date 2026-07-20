@@ -13,6 +13,13 @@ import { useOfficeSession } from "@/components/OfficeSessionProvider";
 import { SubmitAlertModal } from "@/components/SubmitAlertModal";
 import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
 import { PageCard } from "@/components/PageCard";
+import {
+  FORM_BUTTON_CLASS,
+  FORM_INPUT_CLASS,
+  FORM_LABEL_CLASS,
+  PAGE_HEADING_CLASS,
+  PAGE_SUBHEADING_CLASS,
+} from "@/lib/layout-widths";
 
 function isDuplicateReferenceError(message: string): boolean {
   return /reference number already exists/i.test(message);
@@ -156,17 +163,15 @@ export function SubmitReportCard() {
 
   return (
     <>
-      <PageCard className="lg:p-10">
-        <div className="mb-4 text-center sm:mb-6 lg:mb-8">
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
-            Document Tracker
-          </h1>
-          <p className="mt-0.5 text-sm text-muted">Submit Report</p>
+      <PageCard>
+        <div className="mb-3 text-center">
+          <h1 className={PAGE_HEADING_CLASS}>Document Tracker</h1>
+          <p className={PAGE_SUBHEADING_CLASS}>Submit Report</p>
         </div>
 
-        <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-4 lg:space-y-0">
-          <div className="lg:col-span-2">
-            <label htmlFor="subject" className="mb-2 block text-sm font-medium">
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="subject" className={FORM_LABEL_CLASS}>
               Subject:
             </label>
             <input
@@ -175,14 +180,15 @@ export function SubmitReportCard() {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="e.g. Submission of Communications Technology Report"
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={FORM_INPUT_CLASS}
             />
           </div>
 
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label
               htmlFor="reference"
-              className="mb-2 block text-sm font-medium"
+              className={FORM_LABEL_CLASS}
             >
               Reference Number:
             </label>
@@ -193,12 +199,12 @@ export function SubmitReportCard() {
               value={referenceNumber}
               onChange={(e) => setReferenceNumber(e.target.value)}
               placeholder="e.g. REF-2026-001234"
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={FORM_INPUT_CLASS}
             />
           </div>
 
           <div>
-            <label htmlFor="drafter" className="mb-2 block text-sm font-medium">
+            <label htmlFor="drafter" className={FORM_LABEL_CLASS}>
               Drafter:
             </label>
             <input
@@ -207,20 +213,22 @@ export function SubmitReportCard() {
               value={drafter}
               onChange={(e) => setDrafter(e.target.value)}
               placeholder="e.g. Juan Dela Cruz"
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={FORM_INPUT_CLASS}
             />
           </div>
+          </div>
 
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label htmlFor="office" className="mb-2 block text-sm font-medium">
+            <label htmlFor="office" className={FORM_LABEL_CLASS}>
               Office/Division:
             </label>
             {session?.office ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-                <p className="text-base font-bold text-emerald-900">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <p className="text-sm font-bold text-emerald-900">
                   {session.office}
                 </p>
-                <p className="mt-0.5 text-xs text-emerald-800">
+                <p className="text-[11px] text-emerald-800">
                   Auto-set from your office access token.
                 </p>
               </div>
@@ -231,7 +239,7 @@ export function SubmitReportCard() {
                 onChange={(e) =>
                   setOfficeDivision(e.target.value as OfficeOption)
                 }
-                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={FORM_INPUT_CLASS}
               >
                 <option value="">Select office/division...</option>
                 {OFFICE_OPTIONS.map((office) => (
@@ -243,9 +251,9 @@ export function SubmitReportCard() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label htmlFor="date" className="mb-2 block text-sm font-medium">
+              <label htmlFor="date" className={FORM_LABEL_CLASS}>
                 Date:
               </label>
               <input
@@ -253,11 +261,11 @@ export function SubmitReportCard() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={FORM_INPUT_CLASS}
               />
             </div>
             <div>
-              <label htmlFor="time" className="mb-2 block text-sm font-medium">
+              <label htmlFor="time" className={FORM_LABEL_CLASS}>
                 Time:
               </label>
               <input
@@ -265,13 +273,14 @@ export function SubmitReportCard() {
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={FORM_INPUT_CLASS}
               />
             </div>
           </div>
+          </div>
 
-          <div className="lg:col-span-2">
-            <label htmlFor="action" className="mb-2 block text-sm font-medium">
+          <div>
+            <label htmlFor="action" className={FORM_LABEL_CLASS}>
               Action Requested:
             </label>
             <select
@@ -280,7 +289,7 @@ export function SubmitReportCard() {
               onChange={(e) =>
                 setActionRequested(e.target.value as ActionRequested)
               }
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={FORM_INPUT_CLASS}
             >
               {ACTION_REQUESTED_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -294,19 +303,19 @@ export function SubmitReportCard() {
             type="button"
             onClick={handleSubmitClick}
             disabled={submitting}
-            className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 lg:col-span-2"
+            className={FORM_BUTTON_CLASS}
           >
             Submit Report
           </button>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 lg:col-span-2">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
               {error}
             </p>
           )}
 
           {ready && date && time && (
-            <p className="text-center text-xs text-muted">
+            <p className="text-center text-[11px] text-muted">
               {formatDisplayDate(date)} · {formatDisplayTime(time)}
             </p>
           )}

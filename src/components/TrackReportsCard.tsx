@@ -441,14 +441,14 @@ export function TrackReportsCard() {
   return (
     <>
       <PageCard>
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-md">
                 <TrackIcon />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
                   Track my Reports
                 </h1>
                 <p className="text-sm text-muted">Document Tracker</p>
@@ -501,7 +501,7 @@ export function TrackReportsCard() {
           </div>
         </div>
 
-        <div className="mb-6 space-y-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+        <div className="mb-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
           <FilterToggleGroup
             label="View by Date"
             options={DATE_RANGE_OPTIONS}
