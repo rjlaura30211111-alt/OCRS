@@ -3,7 +3,7 @@ import { SubmitReportCard } from "@/components/SubmitReportCard";
 
 export default function SubmitPage() {
   return (
-    <PageShell align="top">
+    <PageShell full={false} align="top">
       <SubmitReportCard />
     </PageShell>
   );

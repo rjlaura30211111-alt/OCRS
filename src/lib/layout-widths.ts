@@ -1,5 +1,10 @@
-/** Legacy centered pages — still full viewport width. */
-export const PAGE_CONTENT_WIDTH = "w-full max-w-none";
+/** Centered form pages (Submit Report, etc.). */
+export const PAGE_CONTENT_WIDTH =
+  "mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl";
+
+/** Rounded card shell for single-column form pages. */
+export const FORM_PAGE_CARD_CLASS =
+  "flex-none rounded-xl border border-border shadow-md sm:shadow-md";
 
 /** Full-screen pages: flush to both edges on all screen sizes. */
 export const PAGE_FULL_WIDTH = "w-full max-w-none";

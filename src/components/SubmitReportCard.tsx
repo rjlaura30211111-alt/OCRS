@@ -15,9 +15,9 @@ import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
 import { PageCard } from "@/components/PageCard";
 import {
   FORM_BUTTON_CLASS,
-  FORM_GRID_CLASS,
   FORM_INPUT_CLASS,
   FORM_LABEL_CLASS,
+  FORM_PAGE_CARD_CLASS,
   PAGE_HEADING_CLASS,
   PAGE_SUBHEADING_CLASS,
 } from "@/lib/layout-widths";
@@ -164,14 +164,14 @@ export function SubmitReportCard() {
 
   return (
     <>
-      <PageCard>
-        <div className="mb-3 text-center">
+      <PageCard className={`${FORM_PAGE_CARD_CLASS} !py-4 sm:!p-5`}>
+        <div className="mb-4 text-center">
           <h1 className={PAGE_HEADING_CLASS}>Document Tracker</h1>
           <p className={PAGE_SUBHEADING_CLASS}>Submit Report</p>
         </div>
 
-        <div className={FORM_GRID_CLASS}>
-          <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
+        <div className="space-y-3">
+          <div>
             <label htmlFor="subject" className={FORM_LABEL_CLASS}>
               Subject:
             </label>
@@ -185,36 +185,35 @@ export function SubmitReportCard() {
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="reference"
-              className={FORM_LABEL_CLASS}
-            >
-              Reference Number:
-            </label>
-            <input
-              id="reference"
-              ref={referenceInputRef}
-              type="text"
-              value={referenceNumber}
-              onChange={(e) => setReferenceNumber(e.target.value)}
-              placeholder="e.g. REF-2026-001234"
-              className={FORM_INPUT_CLASS}
-            />
-          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="reference" className={FORM_LABEL_CLASS}>
+                Reference Number:
+              </label>
+              <input
+                id="reference"
+                ref={referenceInputRef}
+                type="text"
+                value={referenceNumber}
+                onChange={(e) => setReferenceNumber(e.target.value)}
+                placeholder="e.g. REF-2026-001234"
+                className={FORM_INPUT_CLASS}
+              />
+            </div>
 
-          <div>
-            <label htmlFor="drafter" className={FORM_LABEL_CLASS}>
-              Drafter:
-            </label>
-            <input
-              id="drafter"
-              type="text"
-              value={drafter}
-              onChange={(e) => setDrafter(e.target.value)}
-              placeholder="e.g. Juan Dela Cruz"
-              className={FORM_INPUT_CLASS}
-            />
+            <div>
+              <label htmlFor="drafter" className={FORM_LABEL_CLASS}>
+                Drafter:
+              </label>
+              <input
+                id="drafter"
+                type="text"
+                value={drafter}
+                onChange={(e) => setDrafter(e.target.value)}
+                placeholder="e.g. Juan Dela Cruz"
+                className={FORM_INPUT_CLASS}
+              />
+            </div>
           </div>
 
           <div>
@@ -249,33 +248,34 @@ export function SubmitReportCard() {
             )}
           </div>
 
-          <div>
-            <label htmlFor="date" className={FORM_LABEL_CLASS}>
-              Date:
-            </label>
-            <input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className={FORM_INPUT_CLASS}
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label htmlFor="date" className={FORM_LABEL_CLASS}>
+                Date:
+              </label>
+              <input
+                id="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className={FORM_INPUT_CLASS}
+              />
+            </div>
+            <div>
+              <label htmlFor="time" className={FORM_LABEL_CLASS}>
+                Time:
+              </label>
+              <input
+                id="time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className={FORM_INPUT_CLASS}
+              />
+            </div>
           </div>
 
           <div>
-            <label htmlFor="time" className={FORM_LABEL_CLASS}>
-              Time:
-            </label>
-            <input
-              id="time"
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className={FORM_INPUT_CLASS}
-            />
-          </div>
-
-          <div className="sm:col-span-2 lg:col-span-2 xl:col-span-2">
             <label htmlFor="action" className={FORM_LABEL_CLASS}>
               Action Requested:
             </label>
@@ -295,7 +295,6 @@ export function SubmitReportCard() {
             </select>
           </div>
 
-          <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
           <button
             type="button"
             onClick={handleSubmitClick}
@@ -306,17 +305,16 @@ export function SubmitReportCard() {
           </button>
 
           {error && (
-            <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
               {error}
             </p>
           )}
 
           {ready && date && time && (
-            <p className="mt-2 text-center text-[11px] text-muted">
+            <p className="text-center text-[11px] text-muted">
               {formatDisplayDate(date)} · {formatDisplayTime(time)}
             </p>
           )}
-          </div>
         </div>
       </PageCard>
 
