@@ -779,7 +779,7 @@ export function DocumentTrackingTimeline({
         )}
       </div>
 
-      <div className="relative flex flex-col items-center">
+      <div className="relative flex w-full flex-col items-stretch">
         {submission && (
           <>
             <SubmitTrackingCard
@@ -797,7 +797,7 @@ export function DocumentTrackingTimeline({
         )}
 
         {mainReceives.map((entry, index) => (
-          <div key={entry.id} className="flex w-full flex-col items-center">
+          <div key={entry.id} className="flex w-full flex-col items-stretch">
             <ReceiveTrackingCard
               entry={entry}
               referenceNumber={referenceNumber}
@@ -815,7 +815,7 @@ export function DocumentTrackingTimeline({
         ))}
 
         {completionEntry && (
-          <div className={`flex w-full flex-col items-center ${TRACKING_CARD_WIDTH} xl:max-w-xl`}>
+          <div className="flex w-full flex-col items-stretch">
             {mainReceives.length > 0 && (
               <>
                 <TimelineConnector short branch />

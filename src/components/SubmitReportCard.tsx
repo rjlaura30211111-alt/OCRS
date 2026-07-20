@@ -15,6 +15,7 @@ import { OFFICE_OPTIONS, type OfficeOption } from "@/lib/offices";
 import { PageCard } from "@/components/PageCard";
 import {
   FORM_BUTTON_CLASS,
+  FORM_GRID_CLASS,
   FORM_INPUT_CLASS,
   FORM_LABEL_CLASS,
   PAGE_HEADING_CLASS,
@@ -169,8 +170,8 @@ export function SubmitReportCard() {
           <p className={PAGE_SUBHEADING_CLASS}>Submit Report</p>
         </div>
 
-        <div className="space-y-3">
-          <div>
+        <div className={FORM_GRID_CLASS}>
+          <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
             <label htmlFor="subject" className={FORM_LABEL_CLASS}>
               Subject:
             </label>
@@ -184,7 +185,6 @@ export function SubmitReportCard() {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label
               htmlFor="reference"
@@ -216,9 +216,7 @@ export function SubmitReportCard() {
               className={FORM_INPUT_CLASS}
             />
           </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="office" className={FORM_LABEL_CLASS}>
               Office/Division:
@@ -251,35 +249,33 @@ export function SubmitReportCard() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="date" className={FORM_LABEL_CLASS}>
-                Date:
-              </label>
-              <input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={FORM_INPUT_CLASS}
-              />
-            </div>
-            <div>
-              <label htmlFor="time" className={FORM_LABEL_CLASS}>
-                Time:
-              </label>
-              <input
-                id="time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className={FORM_INPUT_CLASS}
-              />
-            </div>
-          </div>
+          <div>
+            <label htmlFor="date" className={FORM_LABEL_CLASS}>
+              Date:
+            </label>
+            <input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={FORM_INPUT_CLASS}
+            />
           </div>
 
           <div>
+            <label htmlFor="time" className={FORM_LABEL_CLASS}>
+              Time:
+            </label>
+            <input
+              id="time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className={FORM_INPUT_CLASS}
+            />
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-2 xl:col-span-2">
             <label htmlFor="action" className={FORM_LABEL_CLASS}>
               Action Requested:
             </label>
@@ -299,6 +295,7 @@ export function SubmitReportCard() {
             </select>
           </div>
 
+          <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
           <button
             type="button"
             onClick={handleSubmitClick}
@@ -309,16 +306,17 @@ export function SubmitReportCard() {
           </button>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
               {error}
             </p>
           )}
 
           {ready && date && time && (
-            <p className="text-center text-[11px] text-muted">
+            <p className="mt-2 text-center text-[11px] text-muted">
               {formatDisplayDate(date)} · {formatDisplayTime(time)}
             </p>
           )}
+          </div>
         </div>
       </PageCard>
 

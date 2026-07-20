@@ -401,7 +401,7 @@ export function HomeLanding() {
         className="pointer-events-none fixed -right-24 bottom-20 h-64 w-64 rounded-full bg-violet-200/30 blur-3xl"
       />
 
-      <div className={`relative flex min-h-full flex-col px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 sm:min-h-0 sm:justify-center sm:px-6 sm:py-10 ${HOME_LANDING_WIDTH}`}>
+      <div className={`relative flex min-h-full flex-col px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 sm:min-h-0 sm:justify-center sm:px-6 sm:py-8 ${HOME_LANDING_WIDTH}`}>
         <InstallAppPrompt />
 
         <div className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 sm:block sm:flex-none sm:gap-0">
@@ -425,7 +425,7 @@ export function HomeLanding() {
 
           <HomeStatusSummary />
 
-          <div className="grid min-h-0 flex-1 auto-rows-min gap-1.5 sm:mt-8 sm:flex-none sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid min-h-0 flex-1 auto-rows-min gap-2 sm:mt-6 sm:flex-none sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {menuItems.map((item) => (
               <MenuCard
                 key={item.href}

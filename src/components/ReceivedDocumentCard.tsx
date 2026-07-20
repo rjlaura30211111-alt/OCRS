@@ -577,7 +577,7 @@ export function ReceivedDocumentCard() {
         <div
           className={
             selected
-              ? "flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 xl:gap-6"
+              ? "grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start lg:gap-6 xl:gap-8"
               : undefined
           }
         >

@@ -1,24 +1,20 @@
-/** Mobile-first page widths: full width on small screens, progressively wider on desktop. */
-export const PAGE_CONTENT_WIDTH =
-  "w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl";
+/** Legacy centered pages — still full viewport width. */
+export const PAGE_CONTENT_WIDTH = "w-full max-w-none";
 
-/** Compact full-view pages: edge-to-edge on phones, narrow focused card on desktop. */
-export const PAGE_FULL_WIDTH =
-  "w-full sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl";
+/** Full-screen pages: flush to both edges on all screen sizes. */
+export const PAGE_FULL_WIDTH = "w-full max-w-none";
 
-export const PAGE_WIDE_WIDTH = "w-full md:max-w-2xl lg:max-w-4xl xl:max-w-5xl";
+export const PAGE_WIDE_WIDTH = "w-full max-w-none";
 
-/** Shared card shell: whole-view on mobile, compact rounded card on sm+. */
+/** Full-screen panel — no floating card, fills the content area. */
 export const PAGE_CARD_SHELL =
-  "w-full flex-col border-y border-border bg-card px-3 py-2 shadow-sm sm:rounded-xl sm:border sm:p-4 sm:shadow-md pb-[max(0.5rem,env(safe-area-inset-bottom))]";
+  "flex min-h-0 w-full flex-1 flex-col bg-card px-4 py-3 sm:px-6 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]";
 
-export const APP_SHELL_WIDTH = "mx-auto w-full max-w-6xl xl:max-w-7xl";
+export const APP_SHELL_WIDTH = "w-full px-4 sm:px-6";
 
-export const HOME_LANDING_WIDTH =
-  "mx-auto w-full max-w-md sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl";
+export const HOME_LANDING_WIDTH = "w-full max-w-none";
 
-export const TRACKING_CARD_WIDTH =
-  "w-full sm:max-w-xs lg:max-w-sm xl:max-w-md";
+export const TRACKING_CARD_WIDTH = "w-full max-w-none";
 
 export const PAGE_HEADING_CLASS =
   "text-lg font-semibold tracking-tight text-slate-900 sm:text-xl";
@@ -32,3 +28,7 @@ export const FORM_INPUT_CLASS =
 
 export const FORM_BUTTON_CLASS =
   "w-full rounded-lg bg-primary px-3 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60";
+
+/** Multi-column forms that use the full screen width on desktop. */
+export const FORM_GRID_CLASS =
+  "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
