@@ -35,6 +35,10 @@ export const RECEIVE_DISPOSITIONS = [
 export type ReceiveDisposition = (typeof RECEIVE_DISPOSITIONS)[number];
 
 export const OCRS_ONLY_DISPOSITIONS = [
+  "Pull-out",
+  "Hand Carry",
+  "For Concur",
+  "HWI",
   "Uploaded to OLCIMS",
   "Approved-Completed",
 ] as const;
@@ -50,13 +54,19 @@ const SHARED_RECEIVE_DISPOSITIONS: ReceiveDisposition[] = [
   ...STANDARD_RECEIVE_DISPOSITIONS,
   "Signed by RD",
   "Signed by CRS",
-  ...WORKFLOW_DISPOSITIONS,
 ];
 
 export function getReceiveDispositionOptions(office: string): ReceiveDisposition[] {
   const trimmed = office.trim();
   if (trimmed === "OCRS") {
-    return [...SHARED_RECEIVE_DISPOSITIONS, "Uploaded to OLCIMS"];
+    return [
+      ...SHARED_RECEIVE_DISPOSITIONS,
+      "Pull-out",
+      "Hand Carry",
+      "For Concur",
+      "HWI",
+      "Uploaded to OLCIMS",
+    ];
   }
 
   return [...SHARED_RECEIVE_DISPOSITIONS];
