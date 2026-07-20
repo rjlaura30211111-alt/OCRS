@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       () => new Set<string>()
     );
 
-    if (auth) {
+    if (auth && auth.office !== "OCRS") {
       documents = documents.filter((document) =>
         matchesOfficeReportScope({
           viewerOffice: auth.office,

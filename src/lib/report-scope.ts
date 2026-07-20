@@ -1,5 +1,7 @@
 import type { OfficeOption } from "@/lib/offices";
 
+export type OfficeFilter = "all" | OfficeOption;
+
 export function matchesOfficeReportScope(input: {
   viewerOffice: OfficeOption;
   submitOffice: string;
@@ -10,6 +12,22 @@ export function matchesOfficeReportScope(input: {
   const current = (input.currentOffice ?? "").trim();
 
   return submit === viewer || current === viewer;
+}
+
+export function matchesOfficeFilter(
+  filter: OfficeFilter,
+  submitOffice: string,
+  currentOffice: string | null
+): boolean {
+  if (filter === "all") {
+    return true;
+  }
+
+  return matchesOfficeReportScope({
+    viewerOffice: filter,
+    submitOffice,
+    currentOffice,
+  });
 }
 
 export function filterReportsByOffice<

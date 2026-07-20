@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { OcrsDeleteModal, type OcrsDeleteEntryInfo } from "@/components/OcrsDeleteModal";
@@ -13,9 +12,15 @@ import {
   type ReportSummary,
 } from "@/components/TrackingDetailModal";
 import { getDefaultDateValue } from "@/lib/datetime";
+import { FORM_INPUT_CLASS, FORM_LABEL_CLASS } from "@/lib/layout-widths";
 import { formatDispositionLabel, isCompletedDisposition } from "@/lib/dispositions";
 import { isOcrsOffice } from "@/lib/office-permissions";
+import { OFFICE_OPTIONS } from "@/lib/offices";
 import { officeAuthHeaders } from "@/lib/office-session";
+import {
+  matchesOfficeFilter,
+  type OfficeFilter,
+} from "@/lib/report-scope";
 import {
   DATE_RANGE_OPTIONS,
   formatTrackingPhaseLabel,
@@ -199,6 +204,7 @@ export function TrackReportsCard() {
   const [phaseFilter, setPhaseFilter] = useState<TrackingPhaseFilter>(() =>
     initialPhaseFilter(searchParams.get("status"))
   );
+  const [officeFilter, setOfficeFilter] = useState<OfficeFilter>("all");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState(getDefaultDateValue());
   const [contextMenu, setContextMenu] = useState<{
@@ -418,6 +424,12 @@ export function TrackReportsCard() {
         return false;
       }
 
+      if (
+        !matchesOfficeFilter(officeFilter, row.office, row.currentTrack ?? null)
+      ) {
+        return false;
+      }
+
       if (!trimmed) {
         return true;
       }
@@ -433,10 +445,13 @@ export function TrackReportsCard() {
         formatTrackingPhaseLabel(row.trackingPhase).toLowerCase().includes(trimmed)
       );
     });
-  }, [customFrom, customTo, datePreset, phaseFilter, query, reports]);
+  }, [customFrom, customTo, datePreset, officeFilter, phaseFilter, query, reports]);
 
   const hasActiveFilters =
-    datePreset !== "all" || phaseFilter !== "all" || query.trim().length > 0;
+    datePreset !== "all" ||
+    phaseFilter !== "all" ||
+    officeFilter !== "all" ||
+    query.trim().length > 0;
 
   return (
     <>
@@ -454,30 +469,12 @@ export function TrackReportsCard() {
                 <p className="text-sm text-muted">Document Tracker</p>
                 {session && (
                   <p className="mt-1 text-xs font-medium text-emerald-800">
-                    Showing {session.office} documents only
+                    {isOcrsOffice(session.office)
+                      ? officeFilter === "all"
+                        ? "Showing all offices"
+                        : `Showing ${officeFilter} documents`
+                      : `Showing ${session.office} documents only`}
                   </p>
-                )}
-                {session && isOcrsOffice(session.office) && (
-                  <Link
-                    href="/archive"
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-red-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-800"
-                  >
-                    <svg
-                      aria-hidden
-                      className="size-3.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.75}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25v3.75M14 11.25v3.75M5.25 7.5h13.5M9.75 7.5V5.625A1.125 1.125 0 0 1 10.875 4.5h2.25A1.125 1.125 0 0 1 14.25 5.625V7.5"
-                      />
-                    </svg>
-                    View Archive
-                  </Link>
                 )}
               </div>
             </div>
@@ -546,6 +543,27 @@ export function TrackReportsCard() {
             onChange={setPhaseFilter}
             activeClassName="bg-violet-600 text-white shadow-sm"
           />
+
+          <div>
+            <label htmlFor="office-filter" className={FORM_LABEL_CLASS}>
+              View by Office
+            </label>
+            <select
+              id="office-filter"
+              value={officeFilter}
+              onChange={(event) =>
+                setOfficeFilter(event.target.value as OfficeFilter)
+              }
+              className={`${FORM_INPUT_CLASS} max-w-md bg-white focus:border-violet-500 focus:ring-violet-500/20`}
+            >
+              <option value="all">View all offices</option>
+              {OFFICE_OPTIONS.map((office) => (
+                <option key={office} value={office}>
+                  {office}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {loading && (
