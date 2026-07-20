@@ -4,6 +4,7 @@ import Link from "next/link";
 import { HomeStatusSummary } from "@/components/HomeStatusSummary";
 import { InstallAppPrompt } from "@/components/InstallAppPrompt";
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
+import { HOME_LANDING_WIDTH } from "@/lib/layout-widths";
 
 function SubmitIcon({ className = "h-7 w-7" }: { className?: string }) {
   return (
@@ -230,7 +231,7 @@ export function HomeLanding() {
         className="pointer-events-none fixed -right-24 bottom-20 h-64 w-64 rounded-full bg-violet-200/30 blur-3xl"
       />
 
-      <div className="relative mx-auto flex min-h-full w-full max-w-4xl flex-col px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 sm:min-h-0 sm:justify-center sm:px-6 sm:py-10">
+      <div className={`relative flex min-h-full flex-col px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 sm:min-h-0 sm:justify-center sm:px-6 sm:py-10 ${HOME_LANDING_WIDTH}`}>
         <InstallAppPrompt />
 
         <div className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 sm:block sm:flex-none sm:gap-0">

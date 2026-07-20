@@ -155,16 +155,16 @@ export function SubmitReportCard() {
 
   return (
     <>
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-lg">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
+      <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8 lg:p-10">
+        <div className="mb-6 text-center lg:mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Document Tracker
           </h1>
           <p className="mt-1 text-sm text-muted">Submit Report</p>
         </div>
 
-        <div className="space-y-4">
-          <div>
+        <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-4 lg:space-y-0">
+          <div className="lg:col-span-2">
             <label htmlFor="subject" className="mb-2 block text-sm font-medium">
               Subject:
             </label>
@@ -269,7 +269,7 @@ export function SubmitReportCard() {
             </div>
           </div>
 
-          <div>
+          <div className="lg:col-span-2">
             <label htmlFor="action" className="mb-2 block text-sm font-medium">
               Action Requested:
             </label>
@@ -293,13 +293,13 @@ export function SubmitReportCard() {
             type="button"
             onClick={handleSubmitClick}
             disabled={submitting}
-            className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 lg:col-span-2"
           >
             Submit Report
           </button>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 lg:col-span-2">
               {error}
             </p>
           )}

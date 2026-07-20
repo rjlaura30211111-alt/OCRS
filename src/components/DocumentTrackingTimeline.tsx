@@ -13,6 +13,7 @@ import {
   canEditSubmissionAtOffice,
   canEditTrackingAtOffice,
 } from "@/lib/office-permissions";
+import { TRACKING_CARD_WIDTH } from "@/lib/layout-widths";
 import type { OfficeOption } from "@/lib/offices";
 import { officeAuthHeaders } from "@/lib/office-session";
 
@@ -103,7 +104,7 @@ function TimelineConnector({
 }) {
   if (branch) {
     return (
-      <div aria-hidden className="flex w-full max-w-[300px] items-center justify-center py-1">
+      <div aria-hidden className={`flex w-full ${TRACKING_CARD_WIDTH} items-center justify-center py-1`}>
         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-400 to-slate-500" />
         <div className="mx-2 size-2 rounded-full border-2 border-slate-400 bg-white shadow-sm" />
         <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-400 to-slate-500" />
@@ -168,7 +169,7 @@ function TrackingCardShell({
 
   return (
     <article
-      className={`group relative w-full max-w-[300px] overflow-hidden rounded-xl border shadow-[0_10px_30px_-12px_rgba(15,23,42,0.55)] transition-transform duration-200 hover:-translate-y-0.5 ${
+      className={`group relative overflow-hidden rounded-xl border shadow-[0_10px_30px_-12px_rgba(15,23,42,0.55)] transition-transform duration-200 hover:-translate-y-0.5 ${TRACKING_CARD_WIDTH} ${
         completed
           ? "border-emerald-400/50 ring-2 ring-emerald-400/35"
           : variant === "submit"
@@ -637,7 +638,7 @@ function ReceiveTrackingCard({
 
   return (
     <>
-      <div className="relative w-full max-w-[300px]">
+      <div className={`relative ${TRACKING_CARD_WIDTH}`}>
         {step !== undefined && (
           <span
             aria-hidden
@@ -814,7 +815,7 @@ export function DocumentTrackingTimeline({
         ))}
 
         {completionEntry && (
-          <div className="flex w-full max-w-[340px] flex-col items-center">
+          <div className={`flex w-full flex-col items-center ${TRACKING_CARD_WIDTH} xl:max-w-xl`}>
             {mainReceives.length > 0 && (
               <>
                 <TimelineConnector short branch />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useOfficeSession } from "@/components/OfficeSessionProvider";
+import { APP_SHELL_WIDTH } from "@/lib/layout-widths";
 
 export function OfficeAccessHeader() {
   const { session, ready, openModal, signOut } = useOfficeSession();
@@ -12,7 +13,7 @@ export function OfficeAccessHeader() {
   if (session) {
     return (
       <header className="z-40 w-full shrink-0 border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+        <div className={`flex items-center justify-between gap-3 px-4 py-2.5 sm:px-6 ${APP_SHELL_WIDTH}`}>
           <div className="flex min-w-0 items-center gap-3">
             <p className="min-w-0 truncate text-xs text-slate-600 sm:text-sm">
               <span className="font-semibold text-emerald-800">{session.office}</span>
@@ -39,7 +40,7 @@ export function OfficeAccessHeader() {
       <button
         type="button"
         onClick={openModal}
-        className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2 text-left transition hover:bg-amber-100/60 sm:gap-3 sm:px-6 sm:py-2.5"
+        className={`flex items-center justify-between gap-2 px-3 py-2 text-left transition hover:bg-amber-100/60 sm:gap-3 sm:px-6 sm:py-2.5 ${APP_SHELL_WIDTH}`}
       >
         <p className="min-w-0 truncate text-[11px] font-semibold text-amber-950 sm:text-sm">
           <span className="font-bold uppercase tracking-wide text-amber-800">

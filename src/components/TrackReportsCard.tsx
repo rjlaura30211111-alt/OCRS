@@ -374,7 +374,7 @@ export function TrackReportsCard() {
 
   return (
     <>
-      <div className="w-full max-w-6xl rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6">
+      <div className="w-full rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6 lg:p-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2">

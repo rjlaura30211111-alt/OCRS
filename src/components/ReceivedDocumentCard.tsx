@@ -565,9 +565,17 @@ export function ReceivedDocumentCard() {
 
   return (
     <>
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
+      <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8 lg:p-10">
+        <div
+          className={
+            selected
+              ? "lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10"
+              : undefined
+          }
+        >
+          <div className="min-w-0">
+        <div className="mb-6 text-center lg:text-left">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Received a Document
           </h1>
           <p className="mt-1 text-sm text-muted">Document Tracker</p>
@@ -632,8 +640,15 @@ export function ReceivedDocumentCard() {
           </p>
         )}
 
+        {error && (
+          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            {error}
+          </p>
+        )}
+          </div>
+
         {selected && (
-          <>
+          <div className="mt-6 min-w-0 lg:mt-0 lg:sticky lg:top-4 lg:[&_article]:max-w-none lg:[&_article]:w-full">
             <DocumentTrackingTimeline
               submission={submission}
               tracking={tracking}
@@ -687,14 +702,9 @@ export function ReceivedDocumentCard() {
                 onReceiveNext={handleReceiveNext}
               />
             )}
-          </>
+          </div>
         )}
-
-        {error && (
-          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        </div>
       </div>
 
       <QrScannerModal
