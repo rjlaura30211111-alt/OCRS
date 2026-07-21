@@ -275,7 +275,10 @@ export function DeletionRequestsCard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setDeleteTarget(row)}
+                    onClick={() => {
+                      setError(null);
+                      setDeleteTarget(row);
+                    }}
                     className="shrink-0 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700"
                   >
                     Review & Delete
@@ -291,6 +294,7 @@ export function DeletionRequestsCard() {
         open={deleteTarget !== null}
         entry={modalEntry}
         deleting={deleting}
+        error={deleteTarget ? error : null}
         onConfirm={(deletedBy) => void handleApproveDelete(deletedBy)}
         onCancel={() => {
           if (!deleting) {

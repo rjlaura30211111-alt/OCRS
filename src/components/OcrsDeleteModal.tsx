@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDisplayDate, formatDisplayTime } from "@/lib/datetime";
 
 export type OcrsDeleteEntryInfo = {
@@ -19,6 +19,7 @@ type OcrsDeleteModalProps = {
   open: boolean;
   entry: OcrsDeleteEntryInfo | null;
   deleting: boolean;
+  error?: string | null;
   onConfirm: (deletedBy: string) => void;
   onCancel: () => void;
 };
@@ -27,10 +28,13 @@ export function OcrsDeleteModal({
   open,
   entry,
   deleting,
+  error = null,
   onConfirm,
   onCancel,
 }: OcrsDeleteModalProps) {
   const [deletedBy, setDeletedBy] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const deletedByInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -38,10 +42,16 @@ export function OcrsDeleteModal({
     }
 
     setDeletedBy("");
+    setValidationError(null);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    const focusTimer = window.setTimeout(() => {
+      deletedByInputRef.current?.focus();
+    }, 0);
+
     return () => {
+      window.clearTimeout(focusTimer);
       document.body.style.overflow = previousOverflow;
     };
   }, [open, entry?.referenceNumber]);
@@ -52,9 +62,21 @@ export function OcrsDeleteModal({
 
   const deletedAt = new Date();
 
+  function handleConfirmClick() {
+    const trimmed = deletedBy.trim();
+    if (!trimmed) {
+      setValidationError("Please enter the name of the OCRS personnel deleting this entry.");
+      deletedByInputRef.current?.focus();
+      return;
+    }
+
+    setValidationError(null);
+    onConfirm(trimmed);
+  }
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[1px]"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-4 backdrop-blur-[1px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ocrs-delete-title"
@@ -134,18 +156,39 @@ export function OcrsDeleteModal({
           </div>
           <div>
             <label htmlFor="deleted-by" className="mb-1.5 block text-sm font-medium">
-              Deleted by
+              Deleted by <span className="text-red-600">*</span>
             </label>
             <input
               id="deleted-by"
+              ref={deletedByInputRef}
               type="text"
               value={deletedBy}
-              onChange={(e) => setDeletedBy(e.target.value)}
+              onChange={(e) => {
+                setDeletedBy(e.target.value);
+                if (validationError && e.target.value.trim()) {
+                  setValidationError(null);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !deleting) {
+                  e.preventDefault();
+                  handleConfirmClick();
+                }
+              }}
               placeholder="Name of OCRS personnel"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
             />
+            <p className="mt-1 text-xs text-muted">
+              Required before this entry can be moved to Archive.
+            </p>
           </div>
         </div>
+
+        {(validationError || error) && (
+          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            {validationError ?? error}
+          </p>
+        )}
 
         <div className="mt-6 flex gap-3">
           <button
@@ -158,8 +201,8 @@ export function OcrsDeleteModal({
           </button>
           <button
             type="button"
-            onClick={() => onConfirm(deletedBy.trim())}
-            disabled={deleting || !deletedBy.trim()}
+            onClick={handleConfirmClick}
+            disabled={deleting}
             className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-60"
           >
             {deleting ? "Deleting..." : "Yes, Delete"}

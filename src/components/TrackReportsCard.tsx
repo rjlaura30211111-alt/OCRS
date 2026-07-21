@@ -756,6 +756,7 @@ export function TrackReportsCard() {
             role="menuitem"
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50"
             onClick={() => {
+              setError(null);
               setDeleteTarget(contextMenu.row);
               setContextMenu(null);
             }}
@@ -811,6 +812,7 @@ export function TrackReportsCard() {
               : null
           }
           deleting={deleting}
+          error={deleteTarget ? error : null}
           onConfirm={(deletedBy) => void handleOcrsDeleteConfirm(deletedBy)}
           onCancel={() => {
             if (!deleting) {
