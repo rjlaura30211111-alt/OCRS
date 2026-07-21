@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { OcrsDeleteModal, type OcrsDeleteEntryInfo } from "@/components/OcrsDeleteModal";
+import { EditReportModal } from "@/components/EditReportModal";
 import { RequestDeletionModal } from "@/components/RequestDeletionModal";
 import { QrScannerModal } from "@/components/QrScannerModal";
 import { PageCard } from "@/components/PageCard";
@@ -14,7 +15,7 @@ import {
 import { getDefaultDateValue } from "@/lib/datetime";
 import { FORM_INPUT_CLASS, FORM_LABEL_CLASS } from "@/lib/layout-widths";
 import { formatDispositionLabel, isCompletedDisposition } from "@/lib/dispositions";
-import { isOcrsOffice } from "@/lib/office-permissions";
+import { isOcrsOffice, canEditReportAtOffice } from "@/lib/office-permissions";
 import { OFFICE_OPTIONS } from "@/lib/offices";
 import { officeAuthHeaders } from "@/lib/office-session";
 import {
@@ -195,6 +196,10 @@ export function TrackReportsCard() {
   } | null>(null);
   const [highlightedRef, setHighlightedRef] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ReportRow | null>(null);
+  const [editTarget, setEditTarget] = useState<{
+    row: ReportRow;
+    originalReferenceNumber: string;
+  } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
@@ -268,11 +273,16 @@ export function TrackReportsCard() {
       }
 
       const isOcrs = isOcrsOffice(session.office);
+      const canEdit = canEditReportAtOffice(
+        row.currentTrack,
+        session.office,
+        row.status
+      ) && !row.pendingDeletion;
       const canRequest =
         !isOcrs && row.office === session.office && !row.pendingDeletion;
       const canDelete = isOcrs;
 
-      if (!canRequest && !canDelete) {
+      if (!canRequest && !canDelete && !canEdit) {
         return;
       }
 
@@ -697,12 +707,50 @@ export function TrackReportsCard() {
         <div
           ref={contextMenuRef}
           role="menu"
-          className="fixed z-40 min-w-[148px] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+          className="fixed z-40 min-w-[168px] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
           style={{
-            left: Math.min(contextMenu.x, window.innerWidth - 160),
-            top: Math.min(contextMenu.y, window.innerHeight - 56),
+            left: Math.min(contextMenu.x, window.innerWidth - 180),
+            top: Math.min(contextMenu.y, window.innerHeight - 120),
           }}
         >
+          {canEditReportAtOffice(
+            contextMenu.row.currentTrack,
+            session.office,
+            contextMenu.row.status
+          ) &&
+            !contextMenu.row.pendingDeletion && (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-[#1a3f6f] transition hover:bg-violet-50"
+                onClick={() => {
+                  setEditTarget({
+                    row: contextMenu.row,
+                    originalReferenceNumber: contextMenu.row.referenceNumber,
+                  });
+                  setContextMenu(null);
+                }}
+              >
+                <svg
+                  aria-hidden
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.75}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                  />
+                </svg>
+                Edit Report
+              </button>
+            )}
+          {(isOcrsOffice(session.office) ||
+            (contextMenu.row.office === session.office &&
+              !contextMenu.row.pendingDeletion)) && (
           <button
             type="button"
             role="menuitem"
@@ -730,7 +778,22 @@ export function TrackReportsCard() {
               ? "Delete"
               : "Request Deletion"}
           </button>
+          )}
         </div>
+      )}
+
+      {session && editTarget && (
+        <EditReportModal
+          open={editTarget !== null}
+          report={editTarget.row}
+          originalReferenceNumber={editTarget.originalReferenceNumber}
+          officeToken={session.token}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => {
+            setHighlightedRef(null);
+            void loadReports();
+          }}
+        />
       )}
 
       {session && isOcrsOffice(session.office) ? (

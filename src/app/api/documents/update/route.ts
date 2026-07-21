@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { isValidAction } from "@/lib/actions";
 import {
   getDocumentByReference,
-  getDocumentSubmitOffice,
   toDocumentPayload,
   updateDocument,
 } from "@/lib/documents";
 import {
-  canEditSubmissionAtOffice,
+  canEditReportAtOffice,
   isOfficeAuthContext,
   requireOfficeAuth,
 } from "@/lib/office-auth";
@@ -26,6 +25,10 @@ export async function POST(request: NextRequest) {
     const referenceNumber =
       typeof body.referenceNumber === "string"
         ? body.referenceNumber.trim()
+        : "";
+    const newReferenceNumber =
+      typeof body.newReferenceNumber === "string"
+        ? body.newReferenceNumber.trim()
         : "";
     const subject =
       typeof body.subject === "string" ? body.subject.trim() : "";
@@ -72,29 +75,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No Document Found" }, { status: 404 });
     }
 
-    const submitOffice = await getDocumentSubmitOffice(
-      existing.id,
-      existing.currentOffice
-    );
-
     if (
-      !canEditSubmissionAtOffice(
+      !canEditReportAtOffice(
         existing.currentOffice,
-        submitOffice,
-        auth.office
+        auth.office,
+        existing.status
       )
     ) {
       return NextResponse.json(
         {
           error:
-            "You can only edit submission details while the document is at your office.",
+            "You can only edit reports while the document is pending at your office.",
         },
         { status: 403 }
       );
     }
 
+    if (
+      newReferenceNumber &&
+      newReferenceNumber.toLowerCase() !== referenceNumber.toLowerCase()
+    ) {
+      const duplicate = await getDocumentByReference(newReferenceNumber);
+      if (duplicate) {
+        return NextResponse.json(
+          { error: "Reference number already exists." },
+          { status: 409 }
+        );
+      }
+    }
+
     const document = await updateDocument({
       referenceNumber,
+      newReferenceNumber: newReferenceNumber || undefined,
       subject,
       drafter,
       actionRequested,
@@ -108,7 +120,12 @@ export async function POST(request: NextRequest) {
     console.error("document update error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to update document.";
-    const statusCode = message === "No Document Found" ? 404 : 500;
+    const statusCode =
+      message === "No Document Found"
+        ? 404
+        : /already exists/i.test(message)
+          ? 409
+          : 500;
     return NextResponse.json({ error: message }, { status: statusCode });
   }
 }

@@ -1,7 +1,20 @@
 import type { OfficeOption } from "@/lib/offices";
+import { isCompletedDisposition } from "@/lib/dispositions";
 
 export function isOcrsOffice(office: string | null | undefined): boolean {
   return office?.trim() === "OCRS";
+}
+
+export function canEditReportAtOffice(
+  documentOffice: string | null | undefined,
+  authOffice: OfficeOption,
+  rawStatus: string
+): boolean {
+  if (isCompletedDisposition(rawStatus)) {
+    return false;
+  }
+
+  return (documentOffice ?? "").trim() === authOffice;
 }
 
 export function canEditSubmissionAtOffice(

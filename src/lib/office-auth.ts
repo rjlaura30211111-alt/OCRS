@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidOfficeOption, type OfficeOption } from "@/lib/offices";
-import { canEditTrackingAtOffice, canEditSubmissionAtOffice } from "@/lib/office-permissions";
+import {
+  canEditReportAtOffice,
+  canEditTrackingAtOffice,
+  canEditSubmissionAtOffice,
+} from "@/lib/office-permissions";
 import { normalizeOfficeToken } from "@/lib/office-token-normalize";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
-export { canEditTrackingAtOffice, canEditSubmissionAtOffice };
+export { canEditTrackingAtOffice, canEditReportAtOffice, canEditSubmissionAtOffice };
 
 export const OFFICE_TOKEN_HEADER = "x-office-token";
 

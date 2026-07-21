@@ -100,6 +100,7 @@ export type ReceiveDocumentInput = {
 
 export type UpdateDocumentInput = {
   referenceNumber: string;
+  newReferenceNumber?: string;
   subject: string;
   drafter: string;
   actionRequested: ActionRequested;
@@ -539,12 +540,33 @@ export async function updateDocument(
     throw new Error("No Document Found");
   }
 
+  const nextReferenceNumber = (input.newReferenceNumber ?? input.referenceNumber)
+    .trim();
+
+  if (!nextReferenceNumber) {
+    throw new Error("Reference number is required.");
+  }
+
+  if (
+    nextReferenceNumber.toLowerCase() !==
+    existing.referenceNumber.toLowerCase()
+  ) {
+    const duplicate = await getDocumentByReference(nextReferenceNumber);
+    if (duplicate) {
+      throw new Error("Reference number already exists.");
+    }
+  }
+
   const updatePayload: Record<string, string> = {
     subject: input.subject.trim(),
     drafter: input.drafter.trim(),
     action_requested: input.actionRequested,
     updated_at: new Date().toISOString(),
   };
+
+  if (nextReferenceNumber !== existing.referenceNumber) {
+    updatePayload.reference_number = nextReferenceNumber;
+  }
 
   const { data, error } = await supabase
     .from("documents")
@@ -554,7 +576,7 @@ export async function updateDocument(
     .single();
 
   if (error) {
-    rethrowDbError(error);
+    rethrowDbError(error, "Reference number already exists.");
   }
 
   return mapRow(data as DocumentRow);
