@@ -249,7 +249,7 @@ export async function listDocumentReports(
   const { data, error } = await supabase
     .from("documents")
     .select()
-    .order("created_at", { ascending: false })
+    .order("updated_at", { ascending: false })
     .limit(limit);
 
   if (error) {

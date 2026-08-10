@@ -739,6 +739,8 @@ export function DocumentTrackingTimeline({
     mainReceives = receives.slice(0, -1);
   }
 
+  const reversedMainReceives = [...mainReceives].reverse();
+
   if (loading) {
     return (
       <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-8 text-center shadow-inner">
@@ -780,23 +782,26 @@ export function DocumentTrackingTimeline({
       </div>
 
       <div className="relative flex w-full flex-col items-stretch">
-        {submission && (
+        {completionEntry && (
           <>
-            <SubmitTrackingCard
-              submission={submission}
+            <ReceiveTrackingCard
+              entry={completionEntry}
+              referenceNumber={referenceNumber}
               authOffice={authOffice}
               officeToken={officeToken}
               documentCurrentOffice={documentCurrentOffice}
               readOnly={readOnly}
-              onUpdated={(updated) => onSubmissionUpdated?.(updated)}
+              onUpdated={(updated) => onTrackingUpdated?.(updated)}
+              completed
+              step={totalSteps}
             />
-            {(mainReceives.length > 0 || completionEntry) && (
+            {(reversedMainReceives.length > 0 || submission) && (
               <TimelineConnector />
             )}
           </>
         )}
 
-        {mainReceives.map((entry, index) => (
+        {reversedMainReceives.map((entry, index) => (
           <div key={entry.id} className="flex w-full flex-col items-stretch">
             <ReceiveTrackingCard
               entry={entry}
@@ -806,55 +811,30 @@ export function DocumentTrackingTimeline({
               documentCurrentOffice={documentCurrentOffice}
               readOnly={readOnly}
               onUpdated={(updated) => onTrackingUpdated?.(updated)}
-              step={(submission ? 2 : 1) + index}
+              step={
+                totalSteps -
+                (completionEntry ? 1 : 0) -
+                index
+              }
             />
-            {(index < mainReceives.length - 1 || completionEntry) && (
+            {(index < reversedMainReceives.length - 1 || submission) && (
               <TimelineConnector />
             )}
           </div>
         ))}
 
-        {completionEntry && (
-          <div className="flex w-full flex-col items-stretch">
-            {mainReceives.length > 0 && (
-              <>
-                <TimelineConnector short branch />
-                <div className="flex w-full items-start justify-center gap-0 sm:gap-2">
-                  <div
-                    aria-hidden
-                    className="mt-10 hidden h-0.5 w-8 bg-gradient-to-r from-slate-400 to-emerald-400 sm:block"
-                  />
-                  <ReceiveTrackingCard
-                    entry={completionEntry}
-                    referenceNumber={referenceNumber}
-                    authOffice={authOffice}
-                    officeToken={officeToken}
-                    documentCurrentOffice={documentCurrentOffice}
-                    readOnly={readOnly}
-                    onUpdated={(updated) => onTrackingUpdated?.(updated)}
-                    completed
-                    step={(submission ? 2 : 1) + mainReceives.length}
-                  />
-                </div>
-              </>
-            )}
-            {mainReceives.length === 0 && (
-              <>
-                {submission && <TimelineConnector short />}
-                <ReceiveTrackingCard
-                  entry={completionEntry}
-                  referenceNumber={referenceNumber}
-                  authOffice={authOffice}
-                  officeToken={officeToken}
-                  documentCurrentOffice={documentCurrentOffice}
-                  readOnly={readOnly}
-                  onUpdated={(updated) => onTrackingUpdated?.(updated)}
-                  completed
-                  step={submission ? 2 : 1}
-                />
-              </>
-            )}
-          </div>
+        {submission && (
+          <>
+            {reversedMainReceives.length > 0 && <TimelineConnector />}
+            <SubmitTrackingCard
+              submission={submission}
+              authOffice={authOffice}
+              officeToken={officeToken}
+              documentCurrentOffice={documentCurrentOffice}
+              readOnly={readOnly}
+              onUpdated={(updated) => onSubmissionUpdated?.(updated)}
+            />
+          </>
         )}
       </div>
     </div>
