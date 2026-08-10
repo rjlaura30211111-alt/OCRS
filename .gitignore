@@ -33,6 +33,7 @@ yarn-error.log*
 
 # env files
 .env*.local
+OCRS-deployment-accounts.txt
 office-tokens.generated.txt
 office-tokens.generated.pdf
 office-tokens-additional-offices.pdf

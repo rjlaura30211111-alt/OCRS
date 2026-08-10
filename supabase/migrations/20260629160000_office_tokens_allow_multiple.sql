@@ -28,7 +28,7 @@ VALUES
   ('ORPRMD', 'orprmd_ef642d8afab371e08ba6a2baf84d4b3ae2271943cdf55c0c'),
   ('ORID', 'orid_b968dfb0213137eb6cbc673753910c8873b29fec69651b65'),
   ('OROD', 'orod_f66dd641eefd56f908ec8a53a76634d06e734705890a10bd'),
-  ('ORLDDD', 'orlddd_f2dd6d00c87b3226bd2bee96f4bb31e7a49d271dc63ae3f6'),
+  ('ORLRDD', 'rlrdd_d3da1c68acef46d48ec988247e240ea7a6460a5320dce80b'),
   ('ORCADD', 'orcadd_5153702c35bfad090415d90d3b43e1caba89342f8254ad76'),
   ('ORCD', 'orcd_b24a9bf5c46231adf872f625cc1a3d4bca3a6ceae5bf174c'),
   ('ORIDMD', 'oridmd_7f141ab6d6f799fe07e015d774e8dee58371378df20a998b'),
