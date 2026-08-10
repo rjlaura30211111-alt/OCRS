@@ -239,6 +239,7 @@ export async function searchDocumentsByReference(
 
 export type DocumentReportRecord = DocumentRecord & {
   submitOffice: string;
+  lastActivityAt: string;
 };
 
 export async function listDocumentReports(
@@ -279,13 +280,38 @@ export async function listDocumentReports(
     submitOfficeByDocumentId.set(log.document_id, log.office_code);
   }
 
-  return documents.map((document) => ({
-    ...document,
-    submitOffice:
-      submitOfficeByDocumentId.get(document.id) ??
-      document.currentOffice ??
-      "—",
-  }));
+  const { data: activityLogs, error: activityError } = await supabase
+    .from("document_routing_logs")
+    .select("document_id, logged_at")
+    .in("document_id", documentIds)
+    .order("logged_at", { ascending: false });
+
+  if (activityError) {
+    rethrowDbError(activityError);
+  }
+
+  const lastActivityByDocumentId = new Map<string, string>();
+  for (const log of activityLogs ?? []) {
+    if (!lastActivityByDocumentId.has(log.document_id)) {
+      lastActivityByDocumentId.set(log.document_id, log.logged_at);
+    }
+  }
+
+  return documents
+    .map((document) => ({
+      ...document,
+      submitOffice:
+        submitOfficeByDocumentId.get(document.id) ??
+        document.currentOffice ??
+        "—",
+      lastActivityAt:
+        lastActivityByDocumentId.get(document.id) ?? document.updatedAt,
+    }))
+    .sort(
+      (left, right) =>
+        new Date(right.lastActivityAt).getTime() -
+        new Date(left.lastActivityAt).getTime()
+    );
 }
 
 export function toReportPayload(document: DocumentReportRecord) {
@@ -305,6 +331,7 @@ export function toReportPayload(document: DocumentReportRecord) {
     trackingPhase,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
+    lastActivityAt: document.lastActivityAt,
   };
 }
 

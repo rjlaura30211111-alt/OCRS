@@ -37,8 +37,20 @@ type ReportRow = ReportSummary & {
   trackingPhase: TrackingPhase;
   createdAt: string;
   updatedAt: string;
+  lastActivityAt?: string;
   pendingDeletion?: boolean;
 };
+
+function compareReportsByLatestActivity(left: ReportRow, right: ReportRow) {
+  const leftTime = new Date(
+    left.lastActivityAt ?? left.updatedAt ?? left.createdAt
+  ).getTime();
+  const rightTime = new Date(
+    right.lastActivityAt ?? right.updatedAt ?? right.createdAt
+  ).getTime();
+
+  return rightTime - leftTime;
+}
 
 function ScanQrButton({ onClick }: { onClick: () => void }) {
   return (
@@ -406,7 +418,8 @@ export function TrackReportsCard() {
   const filtered = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
 
-    return reports.filter((row) => {
+    return reports
+      .filter((row) => {
       if (!matchesDateRange(row.createdAt, datePreset, customFrom, customTo)) {
         return false;
       }
@@ -435,7 +448,8 @@ export function TrackReportsCard() {
         formatDispositionLabel(row.status).toLowerCase().includes(trimmed) ||
         formatTrackingPhaseLabel(row.trackingPhase).toLowerCase().includes(trimmed)
       );
-    });
+    })
+      .sort(compareReportsByLatestActivity);
   }, [customFrom, customTo, datePreset, officeFilter, phaseFilter, query, reports]);
 
   const hasActiveFilters =
