@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
     }
 
     const auth = await optionalOfficeAuth(request);
-    let documents = await listDocumentReports(limit);
+    const scopeOffice =
+      auth && auth.office !== "OCRS" ? auth.office : undefined;
+    let documents = await listDocumentReports(limit, scopeOffice);
     const pendingDeletionRefs = await getPendingDeletionReferenceNumbers().catch(
       () => new Set<string>()
     );

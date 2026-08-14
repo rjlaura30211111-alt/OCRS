@@ -242,60 +242,172 @@ export type DocumentReportRecord = DocumentRecord & {
   lastActivityAt: string;
 };
 
-export async function listDocumentReports(
-  limit = 100
-): Promise<DocumentReportRecord[]> {
-  const supabase = getSupabaseAdmin();
+const REPORT_LOG_CHUNK_SIZE = 100;
 
-  const { data, error } = await supabase
-    .from("documents")
-    .select()
-    .order("updated_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    rethrowDbError(error);
+async function fetchDocumentRowsByIds(ids: string[]): Promise<DocumentRow[]> {
+  if (ids.length === 0) {
+    return [];
   }
 
-  const documents = (data ?? []).map((row) => mapRow(row as DocumentRow));
+  const supabase = getSupabaseAdmin();
+  const rows: DocumentRow[] = [];
 
+  for (let index = 0; index < ids.length; index += REPORT_LOG_CHUNK_SIZE) {
+    const chunk = ids.slice(index, index + REPORT_LOG_CHUNK_SIZE);
+    const { data, error } = await supabase
+      .from("documents")
+      .select()
+      .in("id", chunk);
+
+    if (error) {
+      rethrowDbError(error);
+    }
+
+    rows.push(...((data ?? []) as DocumentRow[]));
+  }
+
+  return rows;
+}
+
+async function fetchScopedDocumentRows(
+  office: string,
+  limit: number
+): Promise<DocumentRow[]> {
+  const supabase = getSupabaseAdmin();
+  const trimmed = office.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  const [
+    { data: atOffice, error: atOfficeError },
+    { data: submitLogs, error: submitError },
+  ] = await Promise.all([
+    supabase
+      .from("documents")
+      .select()
+      .eq("current_office", trimmed)
+      .order("updated_at", { ascending: false })
+      .limit(limit),
+    supabase
+      .from("document_routing_logs")
+      .select("document_id")
+      .eq("office_code", trimmed)
+      .eq("notes", "Document submitted")
+      .order("logged_at", { ascending: false })
+      .limit(limit * 3),
+  ]);
+
+  if (atOfficeError) {
+    rethrowDbError(atOfficeError);
+  }
+
+  if (submitError) {
+    rethrowDbError(submitError);
+  }
+
+  const byId = new Map<string, DocumentRow>();
+  for (const row of atOffice ?? []) {
+    byId.set(row.id, row as DocumentRow);
+  }
+
+  const missingSubmitIds = [
+    ...new Set((submitLogs ?? []).map((log) => log.document_id)),
+  ].filter((id) => !byId.has(id));
+
+  if (missingSubmitIds.length > 0) {
+    const submittedElsewhere = await fetchDocumentRowsByIds(
+      missingSubmitIds.slice(0, limit)
+    );
+
+    for (const row of submittedElsewhere) {
+      byId.set(row.id, row);
+    }
+  }
+
+  return [...byId.values()]
+    .sort(
+      (left, right) =>
+        new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime()
+    )
+    .slice(0, limit);
+}
+
+async function fetchSubmitOfficeByDocumentId(
+  documentIds: string[]
+): Promise<Map<string, string>> {
+  if (documentIds.length === 0) {
+    return new Map();
+  }
+
+  const supabase = getSupabaseAdmin();
+  const submitOfficeByDocumentId = new Map<string, string>();
+
+  for (let index = 0; index < documentIds.length; index += REPORT_LOG_CHUNK_SIZE) {
+    const chunk = documentIds.slice(index, index + REPORT_LOG_CHUNK_SIZE);
+    const { data, error } = await supabase
+      .from("document_routing_logs")
+      .select("document_id, office_code")
+      .in("document_id", chunk)
+      .eq("notes", "Document submitted");
+
+    if (error) {
+      rethrowDbError(error);
+    }
+
+    for (const log of data ?? []) {
+      submitOfficeByDocumentId.set(log.document_id, log.office_code);
+    }
+  }
+
+  return submitOfficeByDocumentId;
+}
+
+async function fetchLastActivityByDocumentId(
+  documentIds: string[]
+): Promise<Map<string, string>> {
+  if (documentIds.length === 0) {
+    return new Map();
+  }
+
+  const supabase = getSupabaseAdmin();
+  const lastActivityByDocumentId = new Map<string, string>();
+
+  for (let index = 0; index < documentIds.length; index += REPORT_LOG_CHUNK_SIZE) {
+    const chunk = documentIds.slice(index, index + REPORT_LOG_CHUNK_SIZE);
+    const { data, error } = await supabase
+      .from("document_routing_logs")
+      .select("document_id, logged_at")
+      .in("document_id", chunk)
+      .order("logged_at", { ascending: false });
+
+    if (error) {
+      rethrowDbError(error);
+    }
+
+    for (const log of data ?? []) {
+      if (!lastActivityByDocumentId.has(log.document_id)) {
+        lastActivityByDocumentId.set(log.document_id, log.logged_at);
+      }
+    }
+  }
+
+  return lastActivityByDocumentId;
+}
+
+async function enrichDocumentReports(
+  documents: DocumentRecord[]
+): Promise<DocumentReportRecord[]> {
   if (documents.length === 0) {
     return [];
   }
 
-  const documentIds = documents.map((doc) => doc.id);
-
-  const { data: submitLogs, error: logError } = await supabase
-    .from("document_routing_logs")
-    .select("document_id, office_code")
-    .in("document_id", documentIds)
-    .eq("notes", "Document submitted");
-
-  if (logError) {
-    rethrowDbError(logError);
-  }
-
-  const submitOfficeByDocumentId = new Map<string, string>();
-  for (const log of submitLogs ?? []) {
-    submitOfficeByDocumentId.set(log.document_id, log.office_code);
-  }
-
-  const { data: activityLogs, error: activityError } = await supabase
-    .from("document_routing_logs")
-    .select("document_id, logged_at")
-    .in("document_id", documentIds)
-    .order("logged_at", { ascending: false });
-
-  if (activityError) {
-    rethrowDbError(activityError);
-  }
-
-  const lastActivityByDocumentId = new Map<string, string>();
-  for (const log of activityLogs ?? []) {
-    if (!lastActivityByDocumentId.has(log.document_id)) {
-      lastActivityByDocumentId.set(log.document_id, log.logged_at);
-    }
-  }
+  const documentIds = documents.map((document) => document.id);
+  const [submitOfficeByDocumentId, lastActivityByDocumentId] = await Promise.all([
+    fetchSubmitOfficeByDocumentId(documentIds),
+    fetchLastActivityByDocumentId(documentIds),
+  ]);
 
   return documents
     .map((document) => ({
@@ -312,6 +424,35 @@ export async function listDocumentReports(
         new Date(right.lastActivityAt).getTime() -
         new Date(left.lastActivityAt).getTime()
     );
+}
+
+export async function listDocumentReports(
+  limit = 100,
+  scopeOffice?: string | null
+): Promise<DocumentReportRecord[]> {
+  const supabase = getSupabaseAdmin();
+  const trimmedScope = scopeOffice?.trim();
+
+  let documentRows: DocumentRow[];
+
+  if (trimmedScope && trimmedScope !== "OCRS") {
+    documentRows = await fetchScopedDocumentRows(trimmedScope, limit);
+  } else {
+    const { data, error } = await supabase
+      .from("documents")
+      .select()
+      .order("updated_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      rethrowDbError(error);
+    }
+
+    documentRows = (data ?? []) as DocumentRow[];
+  }
+
+  const documents = documentRows.map((row) => mapRow(row));
+  return enrichDocumentReports(documents);
 }
 
 export function toReportPayload(document: DocumentReportRecord) {
